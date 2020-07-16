@@ -1,2 +1,7 @@
+# proj dir
 /venv
 /.idea
+
+
+# dbs
+*.sqlite3

@@ -319,3 +319,16 @@ city and the location that have the maximum accident or traffic
 - Due date: 23 July-
 
 
+
+
+# Team tasks breakdown
+
+- Backend / Data (Read and write to the database: 5 Marks)
+    - Data ingestion 
+    - Algorithm (Sort the data and find the max value: 5 Marks)
+    - Charting / analysis (Analyzing data and drawing chart: 5 Marks)
+
+- Frontend / GUI 
+    - Dashboard Navigation
+    - Map visualization (Map drawing and writing the map.html: 5 Marks)
+
