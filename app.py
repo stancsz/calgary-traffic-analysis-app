@@ -80,12 +80,17 @@ def toggle_active_links(pathname):
 def render_page_content(pathname):
     if pathname in ["/", "/page-1"]:
         # df = db.get_dataframe_from_mongo('db_volume', '2017_traffic_volume_flow')
-        df=db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
+        df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
         render_html_table = dash_table.DataTable(
             id='table',
             columns=[{"name": i, "id": i} for i in df.columns],
-            data=df.to_dict('records'),
+            data=df.to_dict('rows'),
+            style_cell={'textAlign': 'left',
+                        'width': '100%',
+                        'max-width': '600px', 'overflow-x': 'wrap'
+                        }
         )
+        # print(render_html_table.available_properties)
         return render_html_table
     elif pathname == "/page-2":
         return html.P("Year")
