@@ -83,12 +83,14 @@ def render_page_content(pathname):
         df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
         render_html_table = dash_table.DataTable(
             id='table',
-            columns=[{"name": i, "id": i} for i in df.columns],
+            columns=[{"name": i.replace("_", " ").title(), "id": i} for i in df.columns],
             data=df.to_dict('rows'),
             style_cell={'textAlign': 'left',
                         'width': '100%',
-                        'max-width': '600px', 'overflow-x': 'wrap'
-                        }
+                        'max-width': '500px',
+                        'overflow-x': 'wrap'
+                        },
+            page_size=20
         )
         # print(render_html_table.available_properties)
         return render_html_table
