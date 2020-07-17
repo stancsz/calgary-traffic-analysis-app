@@ -14,7 +14,7 @@ from db import db
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 time_display = datetime.date.today()
-db.ingest_data('csv')  # ingest all csv data into mongo db
+# db.ingest_data('csv')  # ingest all csv data into mongo db
 
 # the style arguments for the sidebar. We use position:fixed and a fixed width
 SIDEBAR_STYLE = {
@@ -79,7 +79,8 @@ def toggle_active_links(pathname):
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def render_page_content(pathname):
     if pathname in ["/", "/page-1"]:
-        df = db.get_dataframe_from_mongo('db_volume', '2017_traffic_volume_flow')
+        # df = db.get_dataframe_from_mongo('db_volume', '2017_traffic_volume_flow')
+        df=db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
         render_html_table = dash_table.DataTable(
             id='table',
             columns=[{"name": i, "id": i} for i in df.columns],

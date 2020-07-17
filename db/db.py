@@ -61,9 +61,9 @@ def get_dataframe_from_mongo_dummy(csv_path):
     read from mongodb
     :return: a dummy dataframe
     """
-    absolute_path = os.path.abspath(__file__)
-    current_path = os.path.dirname(absolute_path)
-    os.chdir(current_path)
+    # absolute_path = os.path.abspath(__file__)
+    # current_path = os.path.dirname(absolute_path)
+    # os.chdir(current_path)
     data = pd.read_csv(csv_path)
     return data
 
