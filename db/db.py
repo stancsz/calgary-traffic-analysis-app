@@ -169,7 +169,7 @@ def test():
     # ingest_data()
     # check_collection_in_dbs('2017_traffic_volume_flow')
     drop_all_db()
-    ingest_data()
+    ingest_data('../csv')
 
 
 if __name__ == "__main__":

@@ -6,10 +6,15 @@ import dash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_table
 from dash.dependencies import Input, Output
+import pandas
+from flask import render_template
+from db import db
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 time_display = datetime.date.today()
+db.ingest_data('csv')  # ingest all csv data into mongo db
 
 # the style arguments for the sidebar. We use position:fixed and a fixed width
 SIDEBAR_STYLE = {
@@ -35,12 +40,12 @@ sidebar = html.Div(
         html.H2("Traffic Analysis", className="display-4"),
         html.Hr(),
         html.P(
-            "ENSF 592 Term Project \n "+str(time_display), className="lead"
+            "ENSF 592 Term Project \n " + str(time_display), className="lead"
         ),
         dbc.Nav(
             [
                 dbc.NavLink("Traffic Vol", href="/page-1", id="page-1-link"),
-                dbc.NavLink("Year"+" test", href="/page-2", id="page-2-link"),
+                dbc.NavLink("Year", href="/page-2", id="page-2-link"),
                 dbc.NavLink("Read", href="/page-3", id="page-3-link"),
                 dbc.NavLink("Sort", href="/page-4", id="page-4-link"),
                 dbc.NavLink("Analysis", href="/page-5", id="page-5-link"),
@@ -74,7 +79,13 @@ def toggle_active_links(pathname):
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def render_page_content(pathname):
     if pathname in ["/", "/page-1"]:
-        return html.P("Traffic Vol")
+        df = db.get_dataframe_from_mongo('db_volume', '2017_traffic_volume_flow')
+        render_html_table = dash_table.DataTable(
+            id='table',
+            columns=[{"name": i, "id": i} for i in df.columns],
+            data=df.to_dict('records'),
+        )
+        return render_html_table
     elif pathname == "/page-2":
         return html.P("Year")
     elif pathname == "/page-3":
