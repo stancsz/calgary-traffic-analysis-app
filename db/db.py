@@ -2,6 +2,7 @@
 https://docs.mongodb.com/drivers/pymongo
 please make sure mongod is active before running this module
 """
+import os
 from pprint import pprint
 import pandas as pd
 import pymongo
@@ -65,6 +66,13 @@ def create_db(db_name, collection_name, db_url, db_port):
 
 
 def print_collection(db_name, collection_name, db_url, db_port):
+    """
+
+    :param db_name:
+    :param collection_name:
+    :param db_url:
+    :param db_port:
+    """
     mongo_client = pymongo.MongoClient(db_url, db_port)
     db_connection = mongo_client[db_name]
     db_collection = db_connection[collection_name]
@@ -75,14 +83,34 @@ def print_collection(db_name, collection_name, db_url, db_port):
 
 
 def test():
-    db_url = 'localhost'
-    db_port = 27017
-    filepath = 'csv/2017_Traffic_Volume_Flow.csv'
-    import_csv_to_db(filepath, 'db', '2017_Traffic_Volume', db_url, db_port)
-    print_collection('db', '2017_Traffic_Volume', db_url, db_port)
-    drop_collection('db', '2017_Traffic_Volume', db_url, db_port)
-    drop_collection('db', '2017_Traffic_Volume', db_url, db_port)
+    """
+    demonstrating how to use the get dataframe dummy
+    :return:
+    """
+    filepath = 'csv/'+'2017_Traffic_Volume_Flow.csv'
+    data = get_dataframe_from_mongo_dummy(filepath)
+    print(data)
+
+    # db_url = 'localhost'
+    # db_port = 27017
+    # import_csv_to_db(filepath, 'db', '2017_Traffic_Volume', db_url, db_port)
     # print_collection('db', '2017_Traffic_Volume', db_url, db_port)
+    # drop_collection('db', '2017_Traffic_Volume', db_url, db_port)
+    # drop_collection('db', '2017_Traffic_Volume', db_url, db_port)
+    # print_collection('db', '2017_Traffic_Volume', db_url, db_port)
+
+
+def get_dataframe_from_mongo_dummy(csv_path):
+    """
+    will return a dataframe which will be the exactly the same as the real one
+    read from mongodb
+    :return: a dummy dataframe
+    """
+    absolute_path = os.path.abspath(__file__)
+    current_path = os.path.dirname(absolute_path)
+    os.chdir(current_path)
+    data = pd.read_csv(csv_path)
+    return data
 
 
 if __name__ == "__main__":
