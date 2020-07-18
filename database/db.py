@@ -72,11 +72,11 @@ def ingest_data(csv_key):
     # csv_key = 'csv'
     for csv_file in os.listdir(csv_key):
         is_csv = (csv_file.endswith(".csv"))
-        is_flow = (csv_file.find('Incidents') != -1)
+        is_incident = (csv_file.find('Incidents') != -1)
         is_volume = (csv_file.find('Flow') != -1) or (csv_file.find('Volume') != -1)
         path = os.path.join(csv_key, csv_file)
         new_coll_name = Path(path).resolve().stem.lower()
-        if is_csv and is_flow:
+        if is_csv and is_incident:
             import_csv_to_db(path, 'db_incident', new_coll_name)
         elif is_csv and is_volume:
             import_csv_to_db(path, 'db_volume', new_coll_name)
