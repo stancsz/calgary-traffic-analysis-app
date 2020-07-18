@@ -94,7 +94,8 @@ def render_page_content(pathname):
         return html.P("Analysis")
     elif pathname == "/page-6":
         # return html.P("Map")
-        return render_map_html()
+        df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
+        return render_map_html(df, 'the_geom')
     # If the user tries to reach a different page, return a 404 message
     return dbc.Jumbotron(
         [
