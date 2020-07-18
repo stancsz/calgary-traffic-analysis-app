@@ -10,11 +10,13 @@ import dash_table
 from dash.dependencies import Input, Output
 import pandas
 from flask import render_template
-from db import db
+from database import db
+from html_renderer.render_map import get_map, generate_html, render_map_html
+from html_renderer.render_table import render_dataframe
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 time_display = datetime.date.today()
-# db.ingest_data('csv')  # ingest all csv data into mongo db
+# database.ingest_data('csv')  # ingest all csv data into mongo database
 
 # the style arguments for the sidebar. We use position:fixed and a fixed width
 SIDEBAR_STYLE = {
@@ -79,21 +81,9 @@ def toggle_active_links(pathname):
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def render_page_content(pathname):
     if pathname in ["/", "/page-1"]:
-        # df = db.get_dataframe_from_mongo('db_volume', '2017_traffic_volume_flow')
+        # df = database.get_dataframe_from_mongo('db_volume', '2017_traffic_volume_flow')
         df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
-        render_html_table = dash_table.DataTable(
-            id='table',
-            columns=[{"name": i.replace("_", " ").title(), "id": i} for i in df.columns],
-            data=df.to_dict('rows'),
-            style_cell={'textAlign': 'left',
-                        'width': '100%',
-                        'max-width': '500px',
-                        'overflow-x': 'wrap'
-                        },
-            page_size=20
-        )
-        # print(render_html_table.available_properties)
-        return render_html_table
+        return render_dataframe(df)
     elif pathname == "/page-2":
         return html.P("Year")
     elif pathname == "/page-3":
@@ -103,7 +93,8 @@ def render_page_content(pathname):
     elif pathname == "/page-5":
         return html.P("Analysis")
     elif pathname == "/page-6":
-        return html.P("Map")
+        # return html.P("Map")
+        return render_map_html()
     # If the user tries to reach a different page, return a 404 message
     return dbc.Jumbotron(
         [

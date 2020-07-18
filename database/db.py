@@ -143,7 +143,7 @@ def drop_collection(db_name, collection_name, db_url='localhost', db_port=27017)
 
 def create_db(db_name, collection_name, db_url='localhost', db_port=27017):
     """
-    creatimg an empty db
+    creatimg an empty database
     :return:
     """
     mongo_client = pymongo.MongoClient(db_url, db_port)
@@ -154,10 +154,10 @@ def drop_all_db(db_url='localhost', db_port=27017):
     mongo_client = pymongo.MongoClient(db_url, db_port)
     db_list = mongo_client.list_database_names()
     for i in db_list:
-        is_user_db = (i.find('db') != -1)
+        is_user_db = (i.find('database') != -1)
         if is_user_db:
             mongo_client.drop_database(i)
-            print('user db', i, 'is dropped')
+            print('user database', i, 'is dropped')
 
 
 def test():
