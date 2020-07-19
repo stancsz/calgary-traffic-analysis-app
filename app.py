@@ -2,17 +2,18 @@
 plot documentation: https://dash.plot.ly/urls
 """
 import datetime
+
 import dash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
-import dash_table
 from dash.dependencies import Input, Output
-import pandas
-from flask import render_template
+
 from database import db
+from database.db import get_dataframe_from_mongo
+from database.db_index import get_index
 from html_renderer.render_graph import render_graph, generate_graph_dataframe_dummy
-from html_renderer.render_map import get_map, generate_html, render_map_html
+from html_renderer.render_map import render_map_html
 from html_renderer.render_table import render_dataframe
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -124,8 +125,10 @@ def render_status_bar(pathname):
     return status
 
 
-@app.callback(Output("page-content", "children"), [Input("url", "pathname")])
-def render_page_content(pathname):
+@app.callback(Output("page-content", "children"),
+              [Input("url", "pathname"), Input("db-type", "value"), Input("data-year", "value")])
+def render_page_content(pathname, type_input, year_input):
+    # print('print1', pathname, type_input, year_input)
     if pathname in ["/", "/page-1"]:
         return html.Div([
             html.H1('Welcome to ENSF 592 Term Project Demo'),
@@ -135,11 +138,12 @@ def render_page_content(pathname):
             html.P('Others - Stan Chen')
         ])
     elif pathname == "/page-2":
-
-        return html.P("Year")
+        return html.P("")
     elif pathname == "/page-3":
-        # df = database.get_dataframe_from_mongo('db_volume', '2017_traffic_volume_flow')
-        df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
+        inputs = get_index(type_input, year_input)
+        # print(inputs[0],inputs[1])
+        df = get_dataframe_from_mongo(inputs[0], inputs[1])
+        # df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
         return render_dataframe(df)
     elif pathname == "/page-4":
         return html.P("Sort")
