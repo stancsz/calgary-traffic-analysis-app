@@ -44,10 +44,27 @@ sidebar = html.Div(
         html.P(
             "ENSF 592 Term Project \n " + str(datetime.date.today()), className="lead"
         ),
+        dcc.Dropdown(
+            id='db-type',
+            options=[
+                {'label': 'Traffic Volume', 'value': 'volume'},
+                {'label': 'Incidents', 'value': 'incidents'},
+            ],
+            value='volume',
+        ),
+        dcc.Dropdown(
+            id='data-year',
+            options=[
+                {'label': '2016', 'value': '2016'},
+                {'label': '2017', 'value': '2017'},
+                {'label': '2018', 'value': '2018'},
+            ],
+            value='2016'
+        ),
         dbc.Nav(
             [
-                dbc.NavLink("Traffic Vol", href="/page-1", id="page-1-link"),
-                dbc.NavLink("Year", href="/page-2", id="page-2-link"),
+                # dbc.NavLink("Traffic Vol", href="/page-1", id="page-1-link"),
+                # dbc.NavLink("Year", href="/page-2", id="page-2-link"),
                 dbc.NavLink("Read", href="/page-3", id="page-3-link"),
                 dbc.NavLink("Sort", href="/page-4", id="page-4-link"),
                 dbc.NavLink("Analysis", href="/page-5", id="page-5-link"),
@@ -73,14 +90,15 @@ app.layout = html.Div([dcc.Location(id="url"), sidebar, content])
 # this callback uses the current pathname to set the active state of the
 # corresponding nav link to true, allowing users to tell see page they are on
 @app.callback(
-    [Output(f"page-{i}-link", "active") for i in range(1, 7)],
+    [Output(f"page-{i}-link", "active") for i in range(3, 7)],
     [Input("url", "pathname")],
 )
 def toggle_active_links(pathname):
     if pathname == "/":
         # Treat page 1 as the homepage / index
-        return True, False, False, False, False, False
-    return [pathname == f"/page-{i}" for i in range(1, 7)]
+        # return True, False, False, False, False, False
+        return False, False, False, False
+    return [pathname == f"/page-{i}" for i in range(3, 7)]
 
 
 @app.callback(
@@ -105,13 +123,21 @@ def render_status_bar(pathname):
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def render_page_content(pathname):
     if pathname in ["/", "/page-1"]:
+        return html.Div([
+            html.H1('Welcome to ENSF 592 Term Project Demo'),
+            html.H2('Presentation topics and presenter:'),
+            html.P('Data - Burak Gulseren'),
+            html.P('Plot - Sarang Kumar'),
+            html.P('Others - Stan Chen')
+        ])
+    elif pathname == "/page-2":
+
+        return html.P("Year")
+    elif pathname == "/page-3":
+        # return html.P("Read")
         # df = database.get_dataframe_from_mongo('db_volume', '2017_traffic_volume_flow')
         df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
         return render_dataframe(df)
-    elif pathname == "/page-2":
-        return html.P("Year")
-    elif pathname == "/page-3":
-        return html.P("Read")
     elif pathname == "/page-4":
         return html.P("Sort")
     elif pathname == "/page-5":
