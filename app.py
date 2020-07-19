@@ -16,7 +16,6 @@ from html_renderer.render_map import get_map, generate_html, render_map_html
 from html_renderer.render_table import render_dataframe
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
-time_display = datetime.date.today()
 # database.ingest_data('csv')  # ingest all csv data into mongo database
 
 # the style arguments for the sidebar. We use position:fixed and a fixed width
@@ -43,7 +42,7 @@ sidebar = html.Div(
         html.H2("Traffic Analysis", className="display-4"),
         html.Hr(),
         html.P(
-            "ENSF 592 Term Project \n " + str(time_display), className="lead"
+            "ENSF 592 Term Project \n " + str(datetime.date.today()), className="lead"
         ),
         dbc.Nav(
             [
@@ -56,6 +55,11 @@ sidebar = html.Div(
             ],
             vertical=True,
             pills=True,
+        ),
+        dbc.Alert(
+            'Status',
+            id='load-status-bar',
+            color='success',
         ),
     ],
     style=SIDEBAR_STYLE,
@@ -75,8 +79,27 @@ app.layout = html.Div([dcc.Location(id="url"), sidebar, content])
 def toggle_active_links(pathname):
     if pathname == "/":
         # Treat page 1 as the homepage / index
-        return True, False, False
+        return True, False, False, False, False, False
     return [pathname == f"/page-{i}" for i in range(1, 7)]
+
+
+@app.callback(
+    [Output("load-status-bar", "children")],
+    [Input("url", "pathname")],
+)
+def render_status_bar(pathname):
+    switcher = {
+        '/': 'Status',
+        '/page-1': 'Status',
+        '/page-2': 'Status',
+        '/page-3': 'Successfully read from DB',
+        '/page-4': 'Successfully sorted',
+        '/page-5': 'Successfully analyzed',
+        '/page-6': 'Successfully Written Map'
+    }
+    status = [switcher.get(pathname, "Invalid status")]
+    print(status)
+    return status
 
 
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])

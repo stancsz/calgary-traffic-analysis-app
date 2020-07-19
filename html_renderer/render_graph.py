@@ -9,7 +9,7 @@ def generate_graph_dataframe_dummy():
     :return:
     """
     df = px.data.gapminder().query("country=='Canada'")
-    print(df)
+    # print(df)
     return df
 
 
