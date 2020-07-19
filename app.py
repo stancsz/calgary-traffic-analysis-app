@@ -50,7 +50,9 @@ sidebar = html.Div(
                 {'label': 'Traffic Volume', 'value': 'volume'},
                 {'label': 'Incidents', 'value': 'incidents'},
             ],
-            value='volume',
+            # value='volume',
+            placeholder="(Select a data type)",
+            searchable=True,
         ),
         dcc.Dropdown(
             id='data-year',
@@ -59,7 +61,9 @@ sidebar = html.Div(
                 {'label': '2017', 'value': '2017'},
                 {'label': '2018', 'value': '2018'},
             ],
-            value='2016'
+            # value='2016',
+            placeholder="(Select a year)",
+            searchable=True,
         ),
         dbc.Nav(
             [
@@ -116,7 +120,7 @@ def render_status_bar(pathname):
         '/page-6': 'Successfully Written Map'
     }
     status = [switcher.get(pathname, "Invalid status")]
-    print(status)
+    # print(status)
     return status
 
 
@@ -134,7 +138,6 @@ def render_page_content(pathname):
 
         return html.P("Year")
     elif pathname == "/page-3":
-        # return html.P("Read")
         # df = database.get_dataframe_from_mongo('db_volume', '2017_traffic_volume_flow')
         df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
         return render_dataframe(df)
