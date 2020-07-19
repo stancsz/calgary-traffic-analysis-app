@@ -27,7 +27,27 @@ def import_csv_to_db(csv_path, db_name, collection_name, db_url='localhost', db_
     db_connection = mongo_client[db_name]
     db_collection = db_connection[collection_name]
     data = pd.read_csv(csv_path)
+
     payload = json.loads(data.to_json(orient='records'))
+    db_collection.delete_many({})
+    db_collection.insert_many(payload)
+    print('Collection: ', '\'' + collection_name + '\'', ' is imported in DB:', '\'' + db_name + '\'')
+
+def import_dataframe_to_db(df, db_name, collection_name, db_url='localhost', db_port=27017):
+    """
+    Imports a pandas dataframe into a mongo colection
+
+    :param df:
+    :param db_name:
+    :param collection_name:
+    :param db_url:
+    :param db_port:
+    :return:
+    """
+    mongo_client = pymongo.MongoClient(db_url, db_port)
+    db_connection = mongo_client[db_name]
+    db_collection = db_connection[collection_name]
+    payload = json.loads(df.to_json(orient='records'))
     # print(payload)
     db_collection.delete_many({})
     db_collection.insert_many(payload)
@@ -168,9 +188,71 @@ def test():
     # drop_all_db()
     # ingest_data()
     # check_collection_in_dbs('2017_traffic_volume_flow')
-    drop_all_db()
-    ingest_data('../csv')
 
+    drop_all_db()
+    ingest_data('C:/Users/burak/Desktop/Project_ENSF592/csv')
+
+    ## Traffic Flow Dataframe
+    all_volumes = pd.DataFrame()
+    collections_volume = ['2017_traffic_volume_flow','traffic_volumes_for_2018','trafficflow2016_opendata']
+    
+    for collection in collections_volume:
+        ### start reading collection
+        dataFrame = get_dataframe_from_mongo('db_volume', collection, db_url='localhost', db_port=27017)
+
+        # renaming column headers to standardized names
+        if collection == collections_volume[0]:
+            # for 2017_traffic_volume_flow, column order is # year | segment_name | the_geom | length_m | volume
+            dataFrame.columns = ['year', 'segment_name', 'the_geom', 'length_m', 'volume']
+        elif collection == collections_volume[1]:
+            # for traffic_volumes_for_2018, column order is # YEAR | SECNAME | Shape_Leng | VOLUME | multilinestring
+            dataFrame.columns = ['year', 'segment_name', 'length_m', 'volume', 'the_geom']
+        elif collection == collections_volume[2]:
+            # for trafficflow2016_opendata, column order is # secname | the_geom | year_vol | shape_leng | volume
+            dataFrame.columns = ['segment_name', 'the_geom', 'year', 'length_m', 'volume']
+
+        # re-ordering dataframe columns
+        df = dataFrame.reindex(columns= ['segment_name', 'year', 'the_geom', 'length_m', 'volume'])
+
+        # ignore index is to re-index all entries when merging (so that 2nd collection entries do not start from 0)
+        all_volumes = pd.concat([all_volumes, df], ignore_index=True)
+
+
+
+    ## Incidents Dataframe
+    all_incidents = pd.DataFrame()
+    collections_incidents = ['traffic_incidents','traffic_incidents_archive_2016','traffic_incidents_archive_2017']
+
+    for collection in collections_incidents:
+        ### start reading collection
+        dataFrame = get_dataframe_from_mongo('db_incident', collection, db_url='localhost', db_port=27017)
+
+        if collection == collections_incidents[0]:
+            # we don't have id column on the other collections so dropping that
+            del dataFrame['id']
+            # for traffic_incidents,                column order is # INCIDENT INFO | DESCRIPTION | START_DT | MODIFIED_DT | QUADRANT | Longitude | Latitude | location | Count | id
+            # for traffic_incidents_archive_2016,   column order is # INCIDENT INFO | DESCRIPTION | START_DT | MODIFIED_DT | QUADRANT | Longitude | Latitude | location | Count 
+            # for traffic_incidents_archive_2017,   column order is # INCIDENT INFO | DESCRIPTION | START_DT | MODIFIED_DT | QUADRANT | Longitude | Latitude | location | Count 
+
+        # renaming column headers to standardized names
+        dataFrame.columns = ['incident_info', 'description', 'start_date', 'modified_date', 'quadrant', 'longitude', 'latitude', 'location', 'count']
+
+        # re-ordering dataframe columns
+        df = dataFrame.reindex(columns= ['incident_info', 'description', 'start_date', 'modified_date', 'quadrant', 'longitude', 'latitude', 'location', 'count'])
+    
+        # ignore index is to re-index all entries when merging (so that 2nd collection entries do not start from 0)
+        all_incidents = pd.concat([all_incidents, df], ignore_index=True)
+
+    drop_all_db()
+
+    # import unified collections into db
+    import_dataframe_to_db(all_volumes, 'db_volume', 'all_volumes')
+    import_dataframe_to_db(all_incidents, 'db_incident', 'all_incidents')
+
+    # Sort all volumes by volume
+    all_volumes.sort_values(by='volume', inplace=True)
+
+    print(all_volumes)
 
 if __name__ == "__main__":
     test()
