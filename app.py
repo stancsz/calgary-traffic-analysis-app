@@ -11,6 +11,7 @@ from dash.dependencies import Input, Output
 import pandas
 from flask import render_template
 from database import db
+from html_renderer.render_graph import render_graph, generate_graph_dataframe_dummy
 from html_renderer.render_map import get_map, generate_html, render_map_html
 from html_renderer.render_table import render_dataframe
 
@@ -91,7 +92,8 @@ def render_page_content(pathname):
     elif pathname == "/page-4":
         return html.P("Sort")
     elif pathname == "/page-5":
-        return html.P("Analysis")
+        test_df = generate_graph_dataframe_dummy()
+        return render_graph(test_df, 'year', 'lifeExp', 'graph render test')
     elif pathname == "/page-6":
         # return html.P("Map")
         df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
