@@ -3,6 +3,7 @@ https://docs.mongodb.com/drivers/pymongo
 please make sure mongod is active before running this module
 """
 import os
+import datetime
 from pathlib import Path
 from pprint import pprint
 import pandas as pd
@@ -90,6 +91,9 @@ def get_dataframe_from_mongo_dummy(csv_path):
 
 def ingest_data(csv_key):
     # csv_key = 'csv'
+    all_incidents = pd.DataFrame()
+    all_volumes = pd.DataFrame()
+
     for csv_file in os.listdir(csv_key):
         is_csv = (csv_file.endswith(".csv"))
         is_incident = (csv_file.find('Incidents') != -1)
@@ -97,12 +101,21 @@ def ingest_data(csv_key):
         path = os.path.join(csv_key, csv_file)
         new_coll_name = Path(path).resolve().stem.lower()
         if is_csv and is_incident:
-            import_csv_to_db(path, 'db_incident', new_coll_name)
+            df = import_csv_into_dataframe(path, type='traffic_incident')
+            # ignore index is to re-index all entries when merging (so that 2nd collection entries do not start from 0)
+            all_incidents = pd.concat([all_incidents, df], ignore_index=True)
+            #import_csv_to_db(path, 'db_incident', new_coll_name)
         elif is_csv and is_volume:
-            import_csv_to_db(path, 'db_volume', new_coll_name)
+            df = import_csv_into_dataframe(path, type='traffic_volume')
+            # ignore index is to re-index all entries when merging (so that 2nd collection entries do not start from 0)
+            all_volumes = pd.concat([all_volumes, df], ignore_index=True)
+            #import_csv_to_db(path, 'db_volume', new_coll_name)
         else:
             continue
 
+    # import unified dataframes into db
+    import_dataframe_to_db(all_volumes, 'db_volume', 'all_volumes')
+    import_dataframe_to_db(all_incidents, 'db_incident', 'all_incidents')
 
 def reload_ingestion():
     drop_all_db()
@@ -163,7 +176,7 @@ def drop_collection(db_name, collection_name, db_url='localhost', db_port=27017)
 
 def create_db(db_name, collection_name, db_url='localhost', db_port=27017):
     """
-    creatimg an empty database
+    creating an empty database
     :return:
     """
     mongo_client = pymongo.MongoClient(db_url, db_port)
@@ -180,6 +193,88 @@ def drop_all_db(db_url='localhost', db_port=27017):
             print('user database', i, 'is dropped')
 
 
+def import_csv_into_dataframe(path, type):
+    """
+    Reads the path provided csv file and puts that into a dataframe in a standard way.
+    For traffic_volume, column structure will be 'segment_name', 'year', 'the_geom', 'length_m', 'volume'
+    For traffic_incident, column structure will be 'incident_info', 'description', 'start_dt', 'modified_dt', 'year', 'quadrant', 'longitude', 'latitude', 'location', 'count'
+
+    :return: re-structured dataframe
+    """
+    dataFrame = pd.read_csv(path)
+
+    print('Importing ' + path + ' into dataframe.')
+
+    # make all column headers lower case
+    for col in dataFrame.columns:
+        dataFrame.rename(columns={col: col.lower()}, inplace=True)
+
+    ## Traffic Flow Dataframe
+    if type == 'traffic_volume':
+
+        # standardize column header names
+        if 'secname' in dataFrame.columns:
+            dataFrame.rename(columns={'secname': 'segment_name'}, inplace=True)
+        if 'shape_leng' in dataFrame.columns:
+            dataFrame.rename(columns={'shape_leng': 'length_m'}, inplace=True)           
+        if 'multilinestring' in dataFrame.columns:
+            dataFrame.rename(columns={'multilinestring': 'the_geom'}, inplace=True)
+        if 'year_vol' in dataFrame.columns:
+            dataFrame.rename(columns={'year_vol': 'year'}, inplace=True)
+
+        # re-ordering dataframe columns
+        return dataFrame.reindex(columns= ['segment_name', 'year', 'the_geom', 'length_m', 'volume'])
+
+    elif type == 'traffic_incident':
+
+        # standardize column header names and get rid of unused headers
+        if 'id' in dataFrame.columns:
+            del dataFrame['id']
+
+        if 'incident info' in dataFrame.columns:
+            dataFrame.rename(columns={'incident info': 'incident_info'}, inplace=True)
+
+        # build year column by parsing start_dt column
+        years = []
+        for dtStr in dataFrame.start_dt:
+            years.append(datetime.datetime.strptime(dtStr, '%m/%d/%Y %I:%M:%S %p').year)
+        dataFrame['year'] = years
+
+        # re-ordering dataframe columns
+        return dataFrame.reindex(columns= ['incident_info', 'description', 'start_dt', 'modified_dt', 'year', 'quadrant', 'longitude', 'latitude', 'location', 'count'])
+
+
+def get_dataframe_from_db_by_year(year, type):
+    """
+    returns a dataframe from mongodb by its given type and filters entries by year
+    :return: dataframe (filtered by year)
+    """
+    if type == 'traffic_volume':
+        databaseName = 'db_volume'
+        collectionName = 'all_volumes'
+        
+    elif type == 'traffic_incident':
+        databaseName = 'db_incident'
+        collectionName = 'all_incidents'
+    
+        dataFrame = get_dataframe_from_mongo(databaseName, collectionName)
+        return dataFrame[dataFrame.year == year]
+
+
+def sort_dataframe_by(df, type):
+    """
+    sorts a given dataframe by its given type (if traffic_volume then sorts by volume, traffic_incident by count)
+    :return: sorted dataframe
+    """
+    if type == 'traffic_volume':
+        sortBy = 'volume'
+
+    elif type == 'traffic_incident':
+        sortBy = 'count'
+
+    # Sort df
+    return df.sort_values(by=sortBy, inplace=True)
+
 def test():
     """
     demonstrating how to use the get dataframe dummy
@@ -192,67 +287,11 @@ def test():
     drop_all_db()
     ingest_data('C:/Users/burak/Desktop/Project_ENSF592/csv')
 
-    ## Traffic Flow Dataframe
-    all_volumes = pd.DataFrame()
-    collections_volume = ['2017_traffic_volume_flow','traffic_volumes_for_2018','trafficflow2016_opendata']
+    #get_dataframe_from_db_by_year(2017, 'traffic_volume')
+    print(get_dataframe_from_db_by_year(2017, 'traffic_incident'))
     
-    for collection in collections_volume:
-        ### start reading collection
-        dataFrame = get_dataframe_from_mongo('db_volume', collection, db_url='localhost', db_port=27017)
-
-        # renaming column headers to standardized names
-        if collection == collections_volume[0]:
-            # for 2017_traffic_volume_flow, column order is # year | segment_name | the_geom | length_m | volume
-            dataFrame.columns = ['year', 'segment_name', 'the_geom', 'length_m', 'volume']
-        elif collection == collections_volume[1]:
-            # for traffic_volumes_for_2018, column order is # YEAR | SECNAME | Shape_Leng | VOLUME | multilinestring
-            dataFrame.columns = ['year', 'segment_name', 'length_m', 'volume', 'the_geom']
-        elif collection == collections_volume[2]:
-            # for trafficflow2016_opendata, column order is # secname | the_geom | year_vol | shape_leng | volume
-            dataFrame.columns = ['segment_name', 'the_geom', 'year', 'length_m', 'volume']
-
-        # re-ordering dataframe columns
-        df = dataFrame.reindex(columns= ['segment_name', 'year', 'the_geom', 'length_m', 'volume'])
-
-        # ignore index is to re-index all entries when merging (so that 2nd collection entries do not start from 0)
-        all_volumes = pd.concat([all_volumes, df], ignore_index=True)
-
-
-
-    ## Incidents Dataframe
-    all_incidents = pd.DataFrame()
-    collections_incidents = ['traffic_incidents','traffic_incidents_archive_2016','traffic_incidents_archive_2017']
-
-    for collection in collections_incidents:
-        ### start reading collection
-        dataFrame = get_dataframe_from_mongo('db_incident', collection, db_url='localhost', db_port=27017)
-
-        if collection == collections_incidents[0]:
-            # we don't have id column on the other collections so dropping that
-            del dataFrame['id']
-            # for traffic_incidents,                column order is # INCIDENT INFO | DESCRIPTION | START_DT | MODIFIED_DT | QUADRANT | Longitude | Latitude | location | Count | id
-            # for traffic_incidents_archive_2016,   column order is # INCIDENT INFO | DESCRIPTION | START_DT | MODIFIED_DT | QUADRANT | Longitude | Latitude | location | Count 
-            # for traffic_incidents_archive_2017,   column order is # INCIDENT INFO | DESCRIPTION | START_DT | MODIFIED_DT | QUADRANT | Longitude | Latitude | location | Count 
-
-        # renaming column headers to standardized names
-        dataFrame.columns = ['incident_info', 'description', 'start_date', 'modified_date', 'quadrant', 'longitude', 'latitude', 'location', 'count']
-
-        # re-ordering dataframe columns
-        df = dataFrame.reindex(columns= ['incident_info', 'description', 'start_date', 'modified_date', 'quadrant', 'longitude', 'latitude', 'location', 'count'])
-    
-        # ignore index is to re-index all entries when merging (so that 2nd collection entries do not start from 0)
-        all_incidents = pd.concat([all_incidents, df], ignore_index=True)
-
-    drop_all_db()
-
-    # import unified collections into db
-    import_dataframe_to_db(all_volumes, 'db_volume', 'all_volumes')
-    import_dataframe_to_db(all_incidents, 'db_incident', 'all_incidents')
-
-    # Sort all volumes by volume
-    all_volumes.sort_values(by='volume', inplace=True)
-
-    print(all_volumes)
+    # print(all_volumes)
 
 if __name__ == "__main__":
     test()
+
