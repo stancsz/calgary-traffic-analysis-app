@@ -10,46 +10,22 @@ import pandas as pd
 import pymongo
 import json
 
-
-# def import_csv_to_mongo(csv_path, db_name, collection_name, db_url, db_port):
-def import_csv_to_db(csv_path, db_name, collection_name, db_url='localhost', db_port=27017):
-    """
-    Imports a csv file at path csv_name to a mongo colection
-    returns: count of the documants in the new collection
-
-    :param csv_path:
-    :param db_name:
-    :param collection_name:
-    :param db_url:
-    :param db_port:
-    :return:
-    """
-    mongo_client = pymongo.MongoClient(db_url, db_port)
-    db_connection = mongo_client[db_name]
-    db_collection = db_connection[collection_name]
-    data = pd.read_csv(csv_path)
-
-    payload = json.loads(data.to_json(orient='records'))
-    db_collection.delete_many({})
-    db_collection.insert_many(payload)
-    print('Collection: ', '\'' + collection_name + '\'', ' is imported in DB:', '\'' + db_name + '\'')
-
 def import_dataframe_to_db(df, db_name, collection_name, db_url='localhost', db_port=27017):
     """
     Imports a pandas dataframe into a mongo colection
 
-    :param df:
-    :param db_name:
-    :param collection_name:
+    :param df: pandas dataframe
+    :param db_name: name of the database (mongodb)
+    :param collection_name: name of the collection
     :param db_url:
     :param db_port:
-    :return:
+    :return: None
     """
     mongo_client = pymongo.MongoClient(db_url, db_port)
     db_connection = mongo_client[db_name]
     db_collection = db_connection[collection_name]
     payload = json.loads(df.to_json(orient='records'))
-    # print(payload)
+
     db_collection.delete_many({})
     db_collection.insert_many(payload)
     print('Collection: ', '\'' + collection_name + '\'', ' is imported in DB:', '\'' + db_name + '\'')
@@ -57,13 +33,13 @@ def import_dataframe_to_db(df, db_name, collection_name, db_url='localhost', db_
 
 def get_dataframe_from_mongo(db_name, collection_name, db_url='localhost', db_port=27017):
     """
-    Get a dataframe from a collection in a mongodb
+    Gets a dataframe from the specified collection inside the specified database.
 
-    :param db_name:
-    :param collection_name:
+    :param db_name: name of the database (mongodb)
+    :param collection_name: name of the collection
     :param db_url:
     :param db_port:
-    :return:
+    :return: pandas dataframe
     """
     check_collection_in_dbs(collection_name)
     mongo_client = pymongo.MongoClient(db_url, db_port)
@@ -76,20 +52,19 @@ def get_dataframe_from_mongo(db_name, collection_name, db_url='localhost', db_po
     return data_frame
 
 
-def get_dataframe_from_mongo_dummy(csv_path):
-    """
-    will return a dataframe which will be the exactly the same as the real one
-    read from mongodb
-    :return: a dummy dataframe
-    """
-    # absolute_path = os.path.abspath(__file__)
-    # current_path = os.path.dirname(absolute_path)
-    # os.chdir(current_path)
-    data = pd.read_csv(csv_path)
-    return data
-
-
 def ingest_data(csv_key):
+    """
+    Reads all the csv files from the csv_key as path (works as absolute path on win environments)
+    Separates csv files if having 'Flow' or 'Incidents' keywords in them, then calls the 
+    import_csv_into_dataframe() accordingly.
+
+    Concatenates result of each csv processing into one unified pandas dataframe (all_incidents or all_volumes)
+    When all csv files are processed, it imports all dataframes into database.
+
+    :param csv_key: path for the csv_files (absolute for Win env)
+    :return: None
+    """
+
     # csv_key = 'csv'
     all_incidents = pd.DataFrame()
     all_volumes = pd.DataFrame()
@@ -99,17 +74,14 @@ def ingest_data(csv_key):
         is_incident = (csv_file.find('Incidents') != -1)
         is_volume = (csv_file.find('Flow') != -1) or (csv_file.find('Volume') != -1)
         path = os.path.join(csv_key, csv_file)
-        new_coll_name = Path(path).resolve().stem.lower()
         if is_csv and is_incident:
             df = import_csv_into_dataframe(path, type='traffic_incident')
             # ignore index is to re-index all entries when merging (so that 2nd collection entries do not start from 0)
             all_incidents = pd.concat([all_incidents, df], ignore_index=True)
-            #import_csv_to_db(path, 'db_incident', new_coll_name)
         elif is_csv and is_volume:
             df = import_csv_into_dataframe(path, type='traffic_volume')
             # ignore index is to re-index all entries when merging (so that 2nd collection entries do not start from 0)
             all_volumes = pd.concat([all_volumes, df], ignore_index=True)
-            #import_csv_to_db(path, 'db_volume', new_coll_name)
         else:
             continue
 
@@ -133,6 +105,7 @@ def check_collection_in_dbs(collection_name, db_url='localhost', db_port=27017):
     in_volume = (collection_name in mongo_client['db_volume'].list_collection_names())
     if not in_incident and not in_volume:
         reload_ingestion()
+        print('Collection not found, reloading ingestion.')
 
 
 def print_collection(db_name, collection_name, db_url, db_port):
@@ -165,7 +138,6 @@ def drop_collection(db_name, collection_name, db_url='localhost', db_port=27017)
     db_connection = mongo_client[db_name]
     db_collection = db_connection[collection_name]
     print(db_connection.list_collection_names())
-    # col_name = 'Programming Languages'
     if collection_name in db_connection.list_collection_names():
         print(collection_name, 'exists:', True)
         db_collection.drop()
@@ -177,17 +149,25 @@ def drop_collection(db_name, collection_name, db_url='localhost', db_port=27017)
 def create_db(db_name, collection_name, db_url='localhost', db_port=27017):
     """
     creating an empty database
-    :return:
+    :return: None
     """
     mongo_client = pymongo.MongoClient(db_url, db_port)
     db_connection = mongo_client[db_name]
 
 
 def drop_all_db(db_url='localhost', db_port=27017):
+    """
+    Drops all databases which contain keyword 'db_'
+
+    :param db_url:
+    :param db_port:
+    :return: None
+    """
+
     mongo_client = pymongo.MongoClient(db_url, db_port)
     db_list = mongo_client.list_database_names()
     for i in db_list:
-        is_user_db = (i.find('database') != -1)
+        is_user_db = (i.find('db_') != -1)
         if is_user_db:
             mongo_client.drop_database(i)
             print('user database', i, 'is dropped')
@@ -196,8 +176,11 @@ def drop_all_db(db_url='localhost', db_port=27017):
 def import_csv_into_dataframe(path, type):
     """
     Reads the path provided csv file and puts that into a dataframe in a standard way.
-    For traffic_volume, column structure will be 'segment_name', 'year', 'the_geom', 'length_m', 'volume'
-    For traffic_incident, column structure will be 'incident_info', 'description', 'start_dt', 'modified_dt', 'year', 'quadrant', 'longitude', 'latitude', 'location', 'count'
+    For traffic_volume, column structure will be
+        -- 'segment_name', 'year', 'the_geom', 'length_m', 'volume' --
+    For traffic_incident, column structure will be
+        -- 'incident_info', 'description', 'start_dt', 'modified_dt', 'year',
+        'quadrant', 'longitude', 'latitude', 'location', 'count' --
 
     :return: re-structured dataframe
     """
@@ -257,14 +240,14 @@ def get_dataframe_from_db_by_year(year, type):
         databaseName = 'db_incident'
         collectionName = 'all_incidents'
     
-        dataFrame = get_dataframe_from_mongo(databaseName, collectionName)
-        return dataFrame[dataFrame.year == year]
+    dataFrame = get_dataframe_from_mongo(databaseName, collectionName)
+    return dataFrame[dataFrame.year == year]
 
 
 def sort_dataframe_by(df, type):
     """
     sorts a given dataframe by its given type (if traffic_volume then sorts by volume, traffic_incident by count)
-    :return: sorted dataframe
+    manipulates the dataframe directly, does not return a different dataframe.
     """
     if type == 'traffic_volume':
         sortBy = 'volume'
@@ -273,24 +256,30 @@ def sort_dataframe_by(df, type):
         sortBy = 'count'
 
     # Sort df
-    return df.sort_values(by=sortBy, inplace=True)
+    df.sort_values(by=sortBy, inplace=True)
+
 
 def test():
     """
-    demonstrating how to use the get dataframe dummy
+    Testing stuff
     :return:
     """
-    # drop_all_db()
-    # ingest_data()
     # check_collection_in_dbs('2017_traffic_volume_flow')
 
+    # Clean up database
     drop_all_db()
+
+    # Read csv files and load them onto db
     ingest_data('C:/Users/burak/Desktop/Project_ENSF592/csv')
 
-    #get_dataframe_from_db_by_year(2017, 'traffic_volume')
-    print(get_dataframe_from_db_by_year(2017, 'traffic_incident'))
-    
-    # print(all_volumes)
+    # Read db to get the traffic_volume dataframe, only for 2017
+    df = get_dataframe_from_db_by_year(2017, 'traffic_volume')
+
+    # Sort the dataframe df
+    sort_dataframe_by(df,'traffic_volume')
+
+    print('\nSorted dataframe:\n')
+    print(df)
 
 if __name__ == "__main__":
     test()
