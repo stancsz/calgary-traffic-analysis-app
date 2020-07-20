@@ -10,6 +10,8 @@ import pandas as pd
 import pymongo
 import json
 
+
+
 def import_dataframe_to_db(df, db_name, collection_name, db_url='localhost', db_port=27017):
     """
     Imports a pandas dataframe into a mongo colection
@@ -66,6 +68,7 @@ def ingest_data(csv_key):
     """
 
     # csv_key = 'csv'
+
     all_incidents = pd.DataFrame()
     all_volumes = pd.DataFrame()
 
@@ -84,10 +87,10 @@ def ingest_data(csv_key):
             all_volumes = pd.concat([all_volumes, df], ignore_index=True)
         else:
             continue
-
+    return all_incidents
     # import unified dataframes into db
-    import_dataframe_to_db(all_volumes, 'db_volume', 'all_volumes')
-    import_dataframe_to_db(all_incidents, 'db_incident', 'all_incidents')
+#    import_dataframe_to_db(all_volumes, 'db_volume', 'all_volumes')
+#    import_dataframe_to_db(all_incidents, 'db_incident', 'all_incidents')
 
 def reload_ingestion():
     drop_all_db()
@@ -227,7 +230,7 @@ def import_csv_into_dataframe(path, type):
         return dataFrame.reindex(columns= ['incident_info', 'description', 'start_dt', 'modified_dt', 'year', 'quadrant', 'longitude', 'latitude', 'location', 'count'])
 
 
-def get_dataframe_from_db_by_year(year, type):
+def get_dataframe_from_db_by_year(df, year, type):
     """
     returns a dataframe from mongodb by its given type and filters entries by year
     :return: dataframe (filtered by year)
@@ -235,13 +238,13 @@ def get_dataframe_from_db_by_year(year, type):
     if type == 'traffic_volume':
         databaseName = 'db_volume'
         collectionName = 'all_volumes'
-        
+        return df[df.year == year]
     elif type == 'traffic_incident':
         databaseName = 'db_incident'
         collectionName = 'all_incidents'
+        return df[df.year == year]
     
-    dataFrame = get_dataframe_from_mongo(databaseName, collectionName)
-    return dataFrame[dataFrame.year == year]
+    
 
 
 def sort_dataframe_by(df, type):
@@ -267,22 +270,13 @@ def test():
     # check_collection_in_dbs('2017_traffic_volume_flow')
 
     # Clean up database
-    drop_all_db()
+    # drop_all_db()
 
     # Read csv files and load them onto db
-    ingest_data('C:/Users/burak/Desktop/Project_ENSF592/csv')
+    df = ingest_data('/Users/sarangkumar/Desktop/Software/ENSF 592/Project_ENSF592/csv')
 
     # Read db to get the traffic_volume dataframe, only for 2017
-    df = get_dataframe_from_db_by_year(2017, 'traffic_volume')
-
-    # Sort the dataframe df
-    sort_dataframe_by(df,'traffic_volume')
-
-    print('\nSorted dataframe:\n')
-    print(df)
-
-    # Read db to get the traffic_incident dataframe, only for 2018
-    df = get_dataframe_from_db_by_year(2018, 'traffic_incident')
+    df = get_dataframe_from_db_by_year(df, 2017, 'traffic_incident')
 
     # Sort the dataframe df
     sort_dataframe_by(df,'traffic_incident')
@@ -290,6 +284,16 @@ def test():
     print('\nSorted dataframe:\n')
     print(df)
 
+    # # Read db to get the traffic_incident dataframe, only for 2018
+    # df = get_dataframe_from_db_by_year(2018, 'traffic_incident')
+
+    # # Sort the dataframe df
+    # sort_dataframe_by(df,'traffic_incident')
+
+    # print('\nSorted dataframe:\n')
+    # print(df)
+
 if __name__ == "__main__":
+
     test()
 
