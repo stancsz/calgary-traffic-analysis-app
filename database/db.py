@@ -284,6 +284,7 @@ def test():
     print('\nSorted dataframe:\n')
     print(df)
 
+    # test
     # # Read db to get the traffic_incident dataframe, only for 2018
     # df = get_dataframe_from_db_by_year(2018, 'traffic_incident')
 
