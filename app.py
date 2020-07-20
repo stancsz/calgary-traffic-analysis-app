@@ -106,11 +106,9 @@ def toggle_active_links(pathname):
     return [pathname == f"/page-{i}" for i in range(3, 7)]
 
 
-@app.callback(
-    [Output("load-status-bar", "children")],
-    [Input("url", "pathname")],
-)
-def render_status_bar(pathname):
+@app.callback([Output("page-content", "children"), Output("load-status-bar", "children")],
+              [Input("url", "pathname"), Input("db-type", "value"), Input("data-year", "value")])
+def render_page_content(pathname, type_input, year_input):
     switcher = {
         '/': 'Status',
         '/page-1': 'Status',
@@ -120,47 +118,42 @@ def render_status_bar(pathname):
         '/page-5': 'Successfully analyzed',
         '/page-6': 'Successfully Written Map'
     }
-    status = [switcher.get(pathname, "Invalid status")]
-    # print(status)
-    return status
-
-
-@app.callback(Output("page-content", "children"),
-              [Input("url", "pathname"), Input("db-type", "value"), Input("data-year", "value")])
-def render_page_content(pathname, type_input, year_input):
+    return_status = [switcher.get(pathname, "Invalid status")]
     # print('print1', pathname, type_input, year_input)
+
     if pathname in ["/", "/page-1"]:
-        return html.Div([
+        return_html = html.Div([
             html.H1('Welcome to ENSF 592 Term Project Demo'),
             html.H2('Presentation topics and presenter:'),
             html.P('Data - Burak Gulseren'),
             html.P('Plot - Sarang Kumar'),
             html.P('Others - Stan Chen')
         ])
+        return return_html, return_status
     elif pathname == "/page-2":
-        return html.P("")
+        return html.P(""), return_status
     elif pathname == "/page-3":
         inputs = get_index(type_input, year_input)
         # print(inputs[0],inputs[1])
         df = get_dataframe_from_mongo(inputs[0], inputs[1])
         # df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
-        return render_dataframe(df)
+        return render_dataframe(df), return_status
     elif pathname == "/page-4":
-        return html.P("Sort")
+        return html.P("Sort"), return_status
     elif pathname == "/page-5":
         test_df = generate_graph_dataframe_dummy()
-        return render_graph(test_df, 'year', 'lifeExp', 'graph render test')
+        return render_graph(test_df, 'year', 'lifeExp', 'graph render test'), return_status
     elif pathname == "/page-6":
         # return html.P("Map")
         df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
-        return render_map_html(df, 'the_geom')
+        return render_map_html(df, 'the_geom'), return_status
     # If the user tries to reach a different page, return a 404 message
     return dbc.Jumbotron(
         [
             html.H1("404: Not found", className="text-danger"),
             html.Hr(),
             html.P(f"The pathname {pathname} was not recognised..."),
-        ]
+        ], return_status
     )
 
 
