@@ -14,11 +14,21 @@ from database.db import get_dataframe_from_mongo
 from database.db_index import get_index
 from html_renderer.render_graph import render_graph, generate_graph_dataframe_dummy
 from html_renderer.render_html import get_project_demo_page
-from html_renderer.render_map import render_map_html
+from html_renderer.render_map import render_volume_map_html, render_incident_map
 from html_renderer.render_table import render_dataframe
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
-# database.ingest_data('csv')  # ingest all csv data into mongo database
+
+# db.ingest_data('csv')  # ingest all csv data into mongo database
+"""
+Quick Lookup for collection and db names
+Collection:  '2017_traffic_volume_flow'  is imported in DB: 'db_volume'
+Collection:  'traffic_incidents'  is imported in DB: 'db_incident'
+Collection:  'trafficflow2016_opendata'  is imported in DB: 'db_volume'
+Collection:  'traffic_incidents_archive_2017'  is imported in DB: 'db_incident'
+Collection:  'traffic_incidents_archive_2016'  is imported in DB: 'db_incident'
+Collection:  'traffic_volumes_for_2018'  is imported in DB: 'db_volume'
+"""
 
 # the style arguments for the sidebar. We use position:fixed and a fixed width
 SIDEBAR_STYLE = {
@@ -138,9 +148,14 @@ def render_page_content(pathname, type_input, year_input):
         test_df = generate_graph_dataframe_dummy()
         return render_graph(test_df, 'year', 'lifeExp', 'graph render test'), return_status
     elif pathname == "/page-6":
-        # return html.P("Map")
-        df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
-        return render_map_html(df, 'the_geom'), return_status
+        # to render a volume map
+        # df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
+        # return render_volume_map_html(df, 'the_geom'), return_status
+
+        # to render a incident map
+        df = db.get_dataframe_from_mongo('db_incident', 'traffic_incidents')
+        return render_incident_map(df), return_status
+
     # If the user tries to reach a different page, return a 404 message
     return dbc.Jumbotron(
         [
