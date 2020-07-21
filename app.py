@@ -13,6 +13,7 @@ from database import db
 from database.db import get_dataframe_from_mongo
 from database.db_index import get_index
 from html_renderer.render_graph import render_graph, generate_graph_dataframe_dummy
+from html_renderer.render_html import get_project_demo_page
 from html_renderer.render_map import render_map_html
 from html_renderer.render_table import render_dataframe
 
@@ -122,21 +123,14 @@ def render_page_content(pathname, type_input, year_input):
     # print('print1', pathname, type_input, year_input)
 
     if pathname in ["/", "/page-1"]:
-        return_html = html.Div([
-            html.H1('Welcome to ENSF 592 Term Project Demo'),
-            html.H2('Presentation topics and presenter:'),
-            html.P('Data - Burak Gulseren'),
-            html.P('Plot - Sarang Kumar'),
-            html.P('Others - Stan Chen')
-        ])
+        return_html = get_project_demo_page
         return return_html, return_status
     elif pathname == "/page-2":
         return html.P(""), return_status
     elif pathname == "/page-3":
         inputs = get_index(type_input, year_input)
-        # print(inputs[0],inputs[1])
         df = get_dataframe_from_mongo(inputs[0], inputs[1])
-        # df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
+        # df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')  # to load dummy data for testing
         return render_dataframe(df), return_status
     elif pathname == "/page-4":
         return html.P("Sort"), return_status
