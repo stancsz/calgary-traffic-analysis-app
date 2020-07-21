@@ -85,6 +85,10 @@ def ingest_data(csv_key):
         else:
             continue
 
+    # clean duplicate entries
+    all_incidents = all_incidents[~all_incidents.duplicated()]
+    all_volumes = all_volumes[~all_volumes.duplicated()]
+
     # import unified dataframes into db
     import_dataframe_to_db(all_volumes, 'db_volume', 'all_volumes')
     import_dataframe_to_db(all_incidents, 'db_incident', 'all_incidents')
@@ -223,8 +227,60 @@ def import_csv_into_dataframe(path, type):
             years.append(datetime.datetime.strptime(dtStr, '%m/%d/%Y %I:%M:%S %p').year)
         dataFrame['year'] = years
 
+        # calculate gps grids of the incident and add them to the dataframe
+        grids = []
+        for index, row in dataFrame.iterrows():
+            grids.append(calculate_geogrid_number(row['latitude'], row['longitude'], 5))
+        dataFrame['grid_num'] = grids
+
         # re-ordering dataframe columns
-        return dataFrame.reindex(columns= ['incident_info', 'description', 'start_dt', 'modified_dt', 'year', 'quadrant', 'longitude', 'latitude', 'location', 'count'])
+        return dataFrame.reindex(columns= ['incident_info', 'description', 'start_dt', 'modified_dt', 'year', 'quadrant', 'latitude', 'longitude', 'location', 'count', 'grid_num'])
+
+def calculate_geogrid_number(latitude, longitude, grid_size):
+    # example, if gridsize = 5 then
+    # 10 x 10 grid:
+    # Grid 0 = grid on the very south-west
+    # Grid 9 = grid on the very south-east
+
+    # Grids 44, 45, 54, 55 = grids close to the city center
+
+    # Grid 90 = grid on the very north-west
+    # Grid 99 = grid on the very north-east
+
+    # GPS boundaries for Calgary
+    longitude_max = -113.75
+    longitude_min = -114.35
+    latitude_max = 51.25
+    latitude_min = 50.75
+
+    # calculate bounds for each grid, calculate equi-distant x-y grids
+    grid_long = list(range(1,grid_size+1))
+    grid_lati = list(range(1,grid_size+1))
+
+    grid_long = [((longitude_max - longitude_min) / grid_size) * i + longitude_min for i in grid_long]
+    grid_lati = [((latitude_max - latitude_min) / grid_size) * i + latitude_min for i in grid_lati]
+
+    # compare inputted long and lati to the look-up tables (grid_long and grid_lati)
+    # increase in latitude (corresponds going further north)
+    for i in range(grid_size):
+        if latitude < latitude_min or latitude > latitude_max:
+            pointYGrid = -1
+            break
+        elif latitude <= grid_lati[i]:
+            pointYGrid = i
+            break
+
+    # increase in longitude (corresponds going further east)
+    for i in range(grid_size):
+        if longitude < longitude_min or longitude > longitude_max:
+            pointXGrid = -1
+            break
+        if longitude <= grid_long[i]:
+            pointXGrid = i
+            break
+
+    gridNumber = (pointYGrid * grid_size) + pointXGrid
+    return gridNumber
 
 
 def get_dataframe_from_db_by_year(year, type):
@@ -258,6 +314,17 @@ def sort_dataframe_by(df, type):
     # Sort df
     df.sort_values(by=sortBy, inplace=True)
 
+def sort_incidents_into_grids(df):
+    newDf = pd.DataFrame(columns=['grid_num', 'incidents'])
+    rowNum = 0
+    for i in range(df['grid_num'].min(), df['grid_num'].max()):
+        df_OnlyOneGrid = df[df.grid_num == i]
+        grid_Num = i
+        incidents = df_OnlyOneGrid['count'].sum()
+        newDf.loc[rowNum] = [grid_Num, incidents]
+        rowNum += 1
+
+    return newDf
 
 def test():
     """
@@ -278,17 +345,23 @@ def test():
     # Sort the dataframe df
     sort_dataframe_by(df,'traffic_volume')
 
-    print('\nSorted dataframe:\n')
-    print(df)
+    # print('\nSorted dataframe:\n')
+    # print(df)
 
     # Read db to get the traffic_incident dataframe, only for 2018
     df = get_dataframe_from_db_by_year(2018, 'traffic_incident')
 
+    print(df)
     # Sort the dataframe df
-    sort_dataframe_by(df,'traffic_incident')
+    sorted_incident_grids = sort_incidents_into_grids(df)
+
+
 
     print('\nSorted dataframe:\n')
-    print(df)
+    print(sorted_incident_grids)
+
+    # print(df[df.incident_info == 'Eastbound Mcknight Boulevard and Centre Street N'])
+
 
 if __name__ == "__main__":
     test()
