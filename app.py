@@ -12,10 +12,11 @@ from dash.dependencies import Input, Output
 from database import db
 from database.db import get_dataframe_from_mongo, get_dataframe_from_db_by_year, ingest_data, sort_dataframe_by
 from database.db_index import get_index, get_status
-from html_renderer.render_graph import render_graph, generate_graph_dataframe_dummy
+from html_renderer.render_graph import render_graph
 from html_renderer.render_html import get_project_demo_page
 from html_renderer.render_map import render_volume_map_html, render_incident_map
 from html_renderer.render_table import render_dataframe
+from plot_data.compute_plot_data import compute_plot_data
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 csv_path = 'csv'
@@ -145,8 +146,7 @@ def render_page_content(pathname, type_input, year_input):
         df = sort_dataframe_by(df_in, type_input)
         return render_dataframe(df), return_status
     elif pathname == "/page-5":
-        test_df = generate_graph_dataframe_dummy()
-        return render_graph(test_df, 'year', 'lifeExp', 'graph render test'), return_status
+        return render_graph(df1, df2), return_status
     elif pathname == "/page-6":
         # to render a volume map
         # df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
