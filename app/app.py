@@ -156,26 +156,29 @@ def render_page_content(pathname, type_input, year_input):
             # to render a volume map
             # df = df.iloc[df['volume'].idxmax()]
             # print(df)
-            print(df['volume'].idxmax())
-            print(df.iloc[[df['volume'].idxmax()]])
-            max_index=df['volume'].idxmax()
-            print(df.iloc[max_index:max_index])
-            item = df.iloc[max_index:max_index+1]
-            print(item)
+            # print(df['volume'].idxmax())
+            # print(df.iloc[[df['volume'].idxmax()]])
+            max_index = df['volume'].idxmax()
+            # print(df.iloc[max_index:max_index])
+            item = df.iloc[max_index:max_index + 1]
+            # print(item)
             # print(df.transpose())
-            return render_volume_map_html(item, 'the_geom'), return_status
+            # return render_volume_map_html(item, 'the_geom'), return_status
+            return_render = render_volume_map_html(item, 'the_geom')
         else:
             # to render a incident map
             # df = df.groupby('domain')['ID'].nunique()
-            return render_incident_map(df), return_status
+            return_render = render_incident_map(df)
+        return return_render, return_status
     # If the user tries to reach a different page, return a 404 message
-    return dbc.Jumbotron(
-        [
-            html.H1("404: Not found", className="text-danger"),
-            html.Hr(),
-            html.P(f"The pathname {pathname} was not recognised..."),
-        ], return_status
-    )
+    # else:
+    #     return dbc.Jumbotron(
+    #         [
+    #             html.H1("404: Not found", className="text-danger"),
+    #             html.Hr(),
+    #             html.P(f"The pathname {pathname} was not recognised..."),
+    #         ], return_status
+    #     )
 
 
 if __name__ == "__main__":

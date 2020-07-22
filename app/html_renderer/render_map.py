@@ -1,7 +1,6 @@
 import folium as folium
 import dash_html_components as html
 from folium import plugins, Popup
-
 from database.geo_json import get_geo_df, get_geo_json_form_df, get_geo_json
 
 
