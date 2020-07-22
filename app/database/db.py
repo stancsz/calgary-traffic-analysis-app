@@ -304,13 +304,16 @@ def get_dataframe_from_db_by_year(df1, df2, db_type, year):
         df = df1
         # databaseName = 'db_volume'
         # collectionName = 'all_volumes'
-        return df[df['year'] == year]
+        return_df=df[df['year'] == year]
+        # return df[df['year'] == year]
+        return return_df
     elif db_type == 'incident':
         df = df2
         # databaseName = 'db_incident'
         # collectionName = 'all_incidents'
-        return df[df['year'] == year]
-
+        return_df=df[df['year'] == year]
+        # return df[df['year'] == year]
+        return return_df
 
 def sort_dataframe_by(df_in, type):
     """

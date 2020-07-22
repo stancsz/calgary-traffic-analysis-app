@@ -22,8 +22,6 @@ app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 csv_path = 'csv'
 df1, df2 = ingest_data(csv_path)  # ingest all csv data into mongo database
 
-
-
 """
 Quick Lookup for collection and db names
 Collection:  '2017_traffic_volume_flow'  is imported in DB: 'db_volume'
@@ -148,22 +146,31 @@ def render_page_content(pathname, type_input, year_input):
     elif pathname == "/page-5":
         return render_graph(df1, df2), return_status
     elif pathname == "/page-6":
-        # to render a volume map
-        # df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
-        # return render_volume_map_html(df, 'the_geom'), return_status
-
-        # to render a incident map
-        df = db.get_dataframe_from_mongo('db_incident', 'traffic_incidents')
-        return render_incident_map(df), return_status
-
+        # if inputs are invalid, prompt a message
+        # inputs = get_index(type_input, year_input)
+        # if inputs == -1:
+        #     return html.P("Please enter valid values"), [""]
+        # process logics to get the right dataframe
+        # print(type_input, int(year_input))
+        df = get_dataframe_from_db_by_year(df1, df2, type_input, int(year_input))
+        if type_input == 'volume':
+            # to render a volume map
+            item = df[df.volume == df.volume.max()]
+            return_render = render_volume_map_html(item, 'the_geom')
+        else:
+            # to render a incident map
+            # df = df.groupby('domain')['ID'].nunique()
+            return_render = render_incident_map(df)
+        return return_render, return_status
     # If the user tries to reach a different page, return a 404 message
-    return dbc.Jumbotron(
-        [
-            html.H1("404: Not found", className="text-danger"),
-            html.Hr(),
-            html.P(f"The pathname {pathname} was not recognised..."),
-        ], return_status
-    )
+    # else:
+    #     return dbc.Jumbotron(
+    #         [
+    #             html.H1("404: Not found", className="text-danger"),
+    #             html.Hr(),
+    #             html.P(f"The pathname {pathname} was not recognised..."),
+    #         ], return_status
+    #     )
 
 
 if __name__ == "__main__":
