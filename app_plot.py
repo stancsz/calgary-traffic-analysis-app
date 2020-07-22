@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from database import db
 
 '''
-Identify/plot total traffic volumes in Calgary between 2016-2018 (2019/20 data was not available)
-Identify/plot total accident volumes in Calgary between 2016-2020 
+Identify/plot maximum traffic volumes in Calgary between 2016-2018 (2019/20 data was not available)
+Identify/plot maximum accident volumes at specific intersection (using Column: Incident_Info) in Calgary between 2016-2020 
 '''
 
 # Read csv files and load them into dataframe
@@ -29,74 +29,69 @@ inc_19 = db.get_dataframe_from_db_by_year(df, 2019, 'traffic_incident')
 inc_20 = db.get_dataframe_from_db_by_year(df, 2020, 'traffic_incident')
 
 #Sum values within 'volume' column to determine sum total
-volumes[0] = vol_16['volume'].sum()
-volumes[1] = vol_17['volume'].sum()
-volumes[2] = vol_18['volume'].sum()
+volumes[0] = vol_16['volume'].max()
+volumes[1] = vol_17['volume'].max()
+volumes[2] = vol_18['volume'].max()
 
-#Initialize vol_mill to store value of volumes dividied by a million. Allows easier presentation
-vol_million = []
+
+#Initialize vol_condensed to store value of volumes dividied by a 1x10^5. Allows easier presentation
+vol_condensed = []
 for x in volumes:
-    vol_million.append(x/1000000)
+    vol_condensed.append(x/100000)
 
+#Function creates a histogram of values of: (Incident Info : count)
+#Will return description of incident info as well as frequency of occurence. 
+#Sorted in Descending order so first element is the maximum number of occurences of Incidents.
+def most_frequent(list):
+    hist = pd.value_counts(list.incident_info, sort = True, ascending =False)
+    return hist[0]
 
 #Sum values within 'count' column to determine sum total. 
 #Note: All count values were equal to 1 and representing each separate incident
-incidents[0] = inc_16['count'].sum()
-incidents[1] = inc_17['count'].sum()
-incidents[2] = inc_18['count'].sum()
-incidents[3] = inc_19['count'].sum()
-incidents[4] = inc_20['count'].sum()
-
+incidents[0] = most_frequent(inc_16)
+incidents[1] = most_frequent(inc_17)
+incidents[2] = most_frequent(inc_18)
+incidents[3] = most_frequent(inc_19)
+incidents[4] = most_frequent(inc_20)
 
 
 ####PLOT VOLUME GRAPH####
 
 #Plot scatter and line plot. Plotting volumes[0:3] because volumes available for 2016,17,18 only. 
-plt.scatter(year[0:3], vol_million)
-plt.plot(year[0:3],vol_million,linestyle = '-',color='green')
+plt.scatter(year[0:3], vol_condensed)
+plt.plot(year[0:3],vol_condensed,linestyle = '-',color='green')
 
 #Plot Attributes
-plt.title('Total Traffic Volume as a Function of Year')
+plt.title('Maximum Traffic Volume as a Function of Year')
 plt.xlabel('Year')
-plt.ylabel('Total Traffic Volume \n (Millions)')
-
+plt.ylabel('Maximum Traffic Volume \n (x10^5)')
 
 #Increment year by 1 on x axis. Ie. prevents decimal point years on x-axis
 plt.xticks(np.arange(min(year[0:3]), max(year[0:3])+1, 1.0))
 
 #Save figure and show plot
-plt.savefig("Volume_Year.jpg")
+plt.savefig("Volume_Year.png")
 plt.show()
 
 
 ####PLOT INCIDENTS GRAPH####
-
+##Graph plots maximum incident occurences (by Incident Info description column) in a specific year
 #Plot scatter and line plot
 plt.scatter(year, incidents)
 plt.plot(year,incidents,linestyle = '-',color='green')
 
 #Plot Attributes
-plt.title('Total Traffic Accidents as a Function of Year')
+plt.title('Maximum Traffic Accidents as a Function of Year')
 plt.xlabel('Year')
-plt.ylabel('Total Traffic Accidents')
+plt.ylabel('Maximum Traffic Accidents')
 
 #Arrange axis with appropriate increments
 plt.xticks(np.arange(min(year), max(year)+1, 1.0))
-plt.yticks(np.arange(0, max(incidents)+1000, 1000))
+plt.yticks(np.arange(0, max(incidents)+5, 5))
 
 #Save figure and show plot
-plt.savefig("Accident_Year.jpg")
+plt.savefig("Accident_Year.png")
 plt.show()
 
-
-####DATAFRAME CONTAINING VOLUME WITH CORRESPONDING YEAR####
-Vol_data = {'Year': year[0:3],'Total Traffic Volume': volumes}
-Vol_df = pd.DataFrame(Vol_data,columns=['Year','Total Traffic Volume'])
-print(Vol_df)
-
-####DATAFRAME CONTAINING INCIDENTS WITH CORRESPONDING YEAR####
-Inc_data = {'Year': year,'Total Traffic Incidents': incidents}
-Inc_df = pd.DataFrame(Inc_data,columns=['Year','Total Traffic Incidents'])
-print(Inc_df)
 
 
