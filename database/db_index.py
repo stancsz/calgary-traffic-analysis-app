@@ -13,11 +13,11 @@ def get_index(db_input, year_input):
         'volume/2018': 1,
         'volume/2019': -1,
         'volume/2020': -1,
-        'incidents/2016': 1,
-        'incidents/2017': 1,
-        'incidents/2018': 1,
-        'incidents/2019': -1,
-        'incidents/2020': -1,
+        'incident/2016': 1,
+        'incident/2017': 1,
+        'incident/2018': 1,
+        'incident/2019': -1,
+        'incident/2020': -1,
     }
     return_index = switcher.get(input_var, -1) # return -1 if index is not found
     return return_index

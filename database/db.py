@@ -308,19 +308,21 @@ def get_dataframe_from_db_by_year(df1, df2, db_type, year):
         return df[df['year'] == year]
 
 
-def sort_dataframe_by(df, type):
+def sort_dataframe_by(df_in, type):
     """
     sorts a given dataframe by its given type (if traffic_volume then sorts by volume, traffic_incident by count)
     manipulates the dataframe directly, does not return a different dataframe.
     """
-    if type == 'traffic_volume':
+    if type == 'volume':
         sortBy = 'volume'
 
-    elif type == 'traffic_incident':
+    elif type == 'incident':
         sortBy = 'count'
 
     # Sort df
-    df.sort_values(by=sortBy, inplace=True)
+    df = df_in
+    df.sort_values(by=sortBy, inplace=True, ascending=False)
+    return df
 
 
 def sort_incidents_into_grids(df):
@@ -344,8 +346,11 @@ def test():
     # Read csv files and load them onto db
     df1, df2 = ingest_data('../csv')
     for year in range(2016, 2019):
-        print(get_dataframe_from_db_by_year(df1, df2, 'volume', year))
-        print(get_dataframe_from_db_by_year(df1, df2, 'incident', year))
+        # print(get_dataframe_from_db_by_year(df1, df2, 'volume', year))
+        # print()
+        df=get_dataframe_from_db_by_year(df1, df2, 'volume', year)
+        print(df.columns)
+        print(sort_dataframe_by(df,'volume'))
 
 
 

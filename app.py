@@ -10,7 +10,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 
 from database import db
-from database.db import get_dataframe_from_mongo, get_dataframe_from_db_by_year, ingest_data
+from database.db import get_dataframe_from_mongo, get_dataframe_from_db_by_year, ingest_data, sort_dataframe_by
 from database.db_index import get_index, get_status
 from html_renderer.render_graph import render_graph, generate_graph_dataframe_dummy
 from html_renderer.render_html import get_project_demo_page
@@ -138,7 +138,12 @@ def render_page_content(pathname, type_input, year_input):
         df = get_dataframe_from_db_by_year(df1, df2, type_input, int(year_input))
         return render_dataframe(df), return_status
     elif pathname == "/page-4":
-        return html.P("Sort"), return_status
+        inputs = get_index(type_input, year_input)
+        if inputs == -1:
+            return html.P("Please enter valid values"), [""]
+        df_in = get_dataframe_from_db_by_year(df1, df2, type_input, int(year_input))
+        df = sort_dataframe_by(df_in, type_input)
+        return render_dataframe(df), return_status
     elif pathname == "/page-5":
         test_df = generate_graph_dataframe_dummy()
         return render_graph(test_df, 'year', 'lifeExp', 'graph render test'), return_status
