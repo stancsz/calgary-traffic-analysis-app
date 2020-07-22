@@ -151,19 +151,11 @@ def render_page_content(pathname, type_input, year_input):
         # if inputs == -1:
         #     return html.P("Please enter valid values"), [""]
         # process logics to get the right dataframe
+        # print(type_input, int(year_input))
         df = get_dataframe_from_db_by_year(df1, df2, type_input, int(year_input))
         if type_input == 'volume':
             # to render a volume map
-            # df = df.iloc[df['volume'].idxmax()]
-            # print(df)
-            # print(df['volume'].idxmax())
-            # print(df.iloc[[df['volume'].idxmax()]])
-            max_index = df['volume'].idxmax()
-            # print(df.iloc[max_index:max_index])
-            item = df.iloc[max_index:max_index + 1]
-            # print(item)
-            # print(df.transpose())
-            # return render_volume_map_html(item, 'the_geom'), return_status
+            item = df[df.volume == df.volume.max()]
             return_render = render_volume_map_html(item, 'the_geom')
         else:
             # to render a incident map

@@ -7,13 +7,16 @@ from database.geo_json import get_geo_df, get_geo_json_form_df, get_geo_json
 def get_map(df, the_geom_col):
     # print(df.columns, the_geom_col)
     yyc_coordinates = (51.121191, -114.048240)
-    yyc_map = folium.Map(location=yyc_coordinates, zoom_start=13)
+    yyc_map = folium.Map(location=yyc_coordinates, zoom_start=10)
     src_geo_df = get_geo_df(df, the_geom_col)
-    # print(src_geo_df)
+    print(df)
+    print(src_geo_df)
     for index, values in enumerate(src_geo_df):
         # print(index, values)
         geojson_polygon = get_geo_json_form_df(src_geo_df, index)
+        print(geojson_polygon)
         lines = [geojson_polygon.coordinates]
+        print(lines)
         folium.PolyLine(lines, weight=12, color='red', popup=Popup('Max volume location')).add_to(yyc_map)
     return yyc_map
 
