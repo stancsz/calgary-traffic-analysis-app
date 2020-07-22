@@ -235,7 +235,7 @@ def import_csv_into_dataframe(path, type):
         # calculate gps grids of the incident and add them to the dataframe
         grids = []
         for index, row in dataFrame.iterrows():
-            grids.append(calculate_geogrid_number(row['latitude'], row['longitude'], 5))
+            grids.append(calculate_geogrid_number(row['latitude'], row['longitude'], 6)) #use 6x6 grids
         dataFrame['grid_num'] = grids
 
         # re-ordering dataframe columns
@@ -245,7 +245,7 @@ def import_csv_into_dataframe(path, type):
 
 
 def calculate_geogrid_number(latitude, longitude, grid_size):
-    # example, if gridsize = 5 then
+    # example, if gridsize = 10 then
     # 10 x 10 grid:
     # Grid 0 = grid on the very south-west
     # Grid 9 = grid on the very south-east
