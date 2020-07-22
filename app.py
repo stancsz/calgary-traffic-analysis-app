@@ -11,7 +11,7 @@ from dash.dependencies import Input, Output
 
 from database import db
 from database.db import get_dataframe_from_mongo
-from database.db_index import get_index
+from database.db_index import get_index, get_status
 from html_renderer.render_graph import render_graph, generate_graph_dataframe_dummy
 from html_renderer.render_html import get_project_demo_page
 from html_renderer.render_map import render_volume_map_html, render_incident_map
@@ -120,25 +120,16 @@ def toggle_active_links(pathname):
 @app.callback([Output("page-content", "children"), Output("load-status-bar", "children")],
               [Input("url", "pathname"), Input("db-type", "value"), Input("data-year", "value")])
 def render_page_content(pathname, type_input, year_input):
-    switcher = {
-        '/': 'Status',
-        '/page-1': 'Status',
-        '/page-2': 'Status',
-        '/page-3': 'Successfully read from DB',
-        '/page-4': 'Successfully sorted',
-        '/page-5': 'Successfully analyzed',
-        '/page-6': 'Successfully Written Map'
-    }
-    return_status = [switcher.get(pathname, "Invalid status")]
-    # print('print1', pathname, type_input, year_input)
-
+    return_status = get_status(pathname)
     if pathname in ["/", "/page-1"]:
-        return_html = get_project_demo_page
+        return_html = get_project_demo_page()
         return return_html, return_status
     elif pathname == "/page-2":
         return html.P(""), return_status
     elif pathname == "/page-3":
         inputs = get_index(type_input, year_input)
+        if inputs == -1:
+            return html.P("Please enter valid values"), [""]
         df = get_dataframe_from_mongo(inputs[0], inputs[1])
         # df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')  # to load dummy data for testing
         return render_dataframe(df), return_status
