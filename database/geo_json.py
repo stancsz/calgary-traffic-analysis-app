@@ -36,8 +36,9 @@ def get_geo_json(coordinates):
 
 
 def get_geo_json_form_df(geo_df, index):
-    geo_raw = geo_df[index]
+    geo_raw = geo_df.iloc[index]
     coordinates = parse_multiline_string(geo_raw)
+
     return get_geo_json(coordinates)
 
 

@@ -22,8 +22,6 @@ app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 csv_path = 'csv'
 df1, df2 = ingest_data(csv_path)  # ingest all csv data into mongo database
 
-
-
 """
 Quick Lookup for collection and db names
 Collection:  '2017_traffic_volume_flow'  is imported in DB: 'db_volume'
@@ -148,14 +146,28 @@ def render_page_content(pathname, type_input, year_input):
     elif pathname == "/page-5":
         return render_graph(df1, df2), return_status
     elif pathname == "/page-6":
-        # to render a volume map
-        # df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')
-        # return render_volume_map_html(df, 'the_geom'), return_status
-
-        # to render a incident map
-        df = db.get_dataframe_from_mongo('db_incident', 'traffic_incidents')
-        return render_incident_map(df), return_status
-
+        # if inputs are invalid, prompt a message
+        # inputs = get_index(type_input, year_input)
+        # if inputs == -1:
+        #     return html.P("Please enter valid values"), [""]
+        # process logics to get the right dataframe
+        df = get_dataframe_from_db_by_year(df1, df2, type_input, int(year_input))
+        if type_input == 'volume':
+            # to render a volume map
+            # df = df.iloc[df['volume'].idxmax()]
+            # print(df)
+            print(df['volume'].idxmax())
+            print(df.iloc[[df['volume'].idxmax()]])
+            max_index=df['volume'].idxmax()
+            print(df.iloc[max_index:max_index])
+            item = df.iloc[max_index:max_index+1]
+            print(item)
+            # print(df.transpose())
+            return render_volume_map_html(item, 'the_geom'), return_status
+        else:
+            # to render a incident map
+            # df = df.groupby('domain')['ID'].nunique()
+            return render_incident_map(df), return_status
     # If the user tries to reach a different page, return a 404 message
     return dbc.Jumbotron(
         [
