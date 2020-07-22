@@ -272,7 +272,7 @@ def calculate_geogrid_number(latitude, longitude, grid_size):
     # increase in latitude (corresponds going further north)
     for i in range(grid_size):
         if latitude < latitude_min or latitude > latitude_max:
-            pointYGrid = -1
+            pointYGrid = -1 # point is outside Calgary geo bounds, assign -1 for those entries
             break
         elif latitude <= grid_lati[i]:
             pointYGrid = i
@@ -281,13 +281,17 @@ def calculate_geogrid_number(latitude, longitude, grid_size):
     # increase in longitude (corresponds going further east)
     for i in range(grid_size):
         if longitude < longitude_min or longitude > longitude_max:
-            pointXGrid = -1
+            pointXGrid = -1 # point is outside Calgary geo bounds, assign -1 for those entries
             break
         if longitude <= grid_long[i]:
             pointXGrid = i
             break
 
-    gridNumber = (pointYGrid * grid_size) + pointXGrid
+    if pointYGrid == -1 or pointXGrid == -1:
+        gridNumber = -1
+    else:
+        gridNumber = (pointYGrid * grid_size) + pointXGrid
+
     return gridNumber
 
 
@@ -315,14 +319,11 @@ def sort_dataframe_by(df_in, type):
     """
     if type == 'volume':
         sortBy = 'volume'
+        return df_in.sort_values(by=sortBy, inplace=True, ascending=False)
 
     elif type == 'incident':
-        sortBy = 'count'
-
-    # Sort df
-    df = df_in
-    df.sort_values(by=sortBy, inplace=True, ascending=False)
-    return df
+        #incident sorting is done through gridding first and summing values for each grid
+        return sort_incidents_into_grids(df_in)
 
 
 def sort_incidents_into_grids(df):
