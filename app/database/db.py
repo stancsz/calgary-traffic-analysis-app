@@ -10,7 +10,8 @@ import pandas as pd
 import pymongo
 import json
 
-def import_dataframe_to_db(df, db_name, collection_name, db_url='localhost', db_port=27017):
+
+def ingest_dataframe_to_db(df, db_name, collection_name, db_url='localhost', db_port=27017):
     """
     Imports a pandas dataframe into a mongo colection
 
@@ -66,6 +67,7 @@ def ingest_data(csv_key):
     """
 
     # csv_key = 'csv'
+
     all_incidents = pd.DataFrame()
     all_volumes = pd.DataFrame()
 
@@ -89,9 +91,12 @@ def ingest_data(csv_key):
     all_incidents = all_incidents[~all_incidents.duplicated()]
     all_volumes = all_volumes[~all_volumes.duplicated()]
 
+    # return all_incidents
     # import unified dataframes into db
-    import_dataframe_to_db(all_volumes, 'db_volume', 'all_volumes')
-    import_dataframe_to_db(all_incidents, 'db_incident', 'all_incidents')
+    ingest_dataframe_to_db(all_volumes, 'db_volume', 'all_volumes')
+    ingest_dataframe_to_db(all_incidents, 'db_incident', 'all_incidents')
+    return all_volumes, all_incidents
+
 
 def reload_ingestion():
     drop_all_db()
@@ -203,14 +208,14 @@ def import_csv_into_dataframe(path, type):
         if 'secname' in dataFrame.columns:
             dataFrame.rename(columns={'secname': 'segment_name'}, inplace=True)
         if 'shape_leng' in dataFrame.columns:
-            dataFrame.rename(columns={'shape_leng': 'length_m'}, inplace=True)           
+            dataFrame.rename(columns={'shape_leng': 'length_m'}, inplace=True)
         if 'multilinestring' in dataFrame.columns:
             dataFrame.rename(columns={'multilinestring': 'the_geom'}, inplace=True)
         if 'year_vol' in dataFrame.columns:
             dataFrame.rename(columns={'year_vol': 'year'}, inplace=True)
 
         # re-ordering dataframe columns
-        return dataFrame.reindex(columns= ['segment_name', 'year', 'the_geom', 'length_m', 'volume'])
+        return dataFrame.reindex(columns=['segment_name', 'year', 'the_geom', 'length_m', 'volume'])
 
     elif type == 'traffic_incident':
 
@@ -234,7 +239,10 @@ def import_csv_into_dataframe(path, type):
         dataFrame['grid_num'] = grids
 
         # re-ordering dataframe columns
-        return dataFrame.reindex(columns= ['incident_info', 'description', 'start_dt', 'modified_dt', 'year', 'quadrant', 'latitude', 'longitude', 'location', 'count', 'grid_num'])
+        return dataFrame.reindex(
+            columns=['incident_info', 'description', 'start_dt', 'modified_dt', 'year', 'quadrant', 'latitude',
+                     'longitude', 'location', 'count', 'grid_num'])
+
 
 def calculate_geogrid_number(latitude, longitude, grid_size):
     # example, if gridsize = 5 then
@@ -254,8 +262,8 @@ def calculate_geogrid_number(latitude, longitude, grid_size):
     latitude_min = 50.75
 
     # calculate bounds for each grid, calculate equi-distant x-y grids
-    grid_long = list(range(1,grid_size+1))
-    grid_lati = list(range(1,grid_size+1))
+    grid_long = list(range(1, grid_size + 1))
+    grid_lati = list(range(1, grid_size + 1))
 
     grid_long = [((longitude_max - longitude_min) / grid_size) * i + longitude_min for i in grid_long]
     grid_lati = [((latitude_max - latitude_min) / grid_size) * i + latitude_min for i in grid_lati]
@@ -283,36 +291,42 @@ def calculate_geogrid_number(latitude, longitude, grid_size):
     return gridNumber
 
 
-def get_dataframe_from_db_by_year(year, type):
+def get_dataframe_from_db_by_year(df1, df2, db_type, year):
     """
     returns a dataframe from mongodb by its given type and filters entries by year
     :return: dataframe (filtered by year)
     """
-    if type == 'traffic_volume':
-        databaseName = 'db_volume'
-        collectionName = 'all_volumes'
-        
-    elif type == 'traffic_incident':
-        databaseName = 'db_incident'
-        collectionName = 'all_incidents'
-    
-    dataFrame = get_dataframe_from_mongo(databaseName, collectionName)
-    return dataFrame[dataFrame.year == year]
+    if db_type == 'volume':
+        df = df1
+        # databaseName = 'db_volume'
+        # collectionName = 'all_volumes'
+        return_df=df[df['year'] == year]
+        # return df[df['year'] == year]
+        return return_df
+    elif db_type == 'incident':
+        df = df2
+        # databaseName = 'db_incident'
+        # collectionName = 'all_incidents'
+        return_df=df[df['year'] == year]
+        # return df[df['year'] == year]
+        return return_df
 
-
-def sort_dataframe_by(df, type):
+def sort_dataframe_by(df_in, type):
     """
     sorts a given dataframe by its given type (if traffic_volume then sorts by volume, traffic_incident by count)
     manipulates the dataframe directly, does not return a different dataframe.
     """
-    if type == 'traffic_volume':
+    if type == 'volume':
         sortBy = 'volume'
 
-    elif type == 'traffic_incident':
+    elif type == 'incident':
         sortBy = 'count'
 
     # Sort df
-    df.sort_values(by=sortBy, inplace=True)
+    df = df_in
+    df.sort_values(by=sortBy, inplace=True, ascending=False)
+    return df
+
 
 def sort_incidents_into_grids(df):
     newDf = pd.DataFrame(columns=['grid_num', 'incidents'])
@@ -326,43 +340,22 @@ def sort_incidents_into_grids(df):
 
     return newDf
 
+
 def test():
     """
     Testing stuff
     :return:
     """
-    # check_collection_in_dbs('2017_traffic_volume_flow')
-
-    # Clean up database
-    drop_all_db()
-
     # Read csv files and load them onto db
-    ingest_data('C:/Users/burak/Desktop/Project_ENSF592/csv')
+    df1, df2 = ingest_data('../csv')
+    for year in range(2016, 2019):
+        # print(get_dataframe_from_db_by_year(df1, df2, 'volume', year))
+        # print()
+        df=get_dataframe_from_db_by_year(df1, df2, 'volume', year)
+        print(df.columns)
+        print(sort_dataframe_by(df,'volume'))
 
-    # Read db to get the traffic_volume dataframe, only for 2017
-    df = get_dataframe_from_db_by_year(2017, 'traffic_volume')
-
-    # Sort the dataframe df
-    sort_dataframe_by(df,'traffic_volume')
-
-    # print('\nSorted dataframe:\n')
-    # print(df)
-
-    # Read db to get the traffic_incident dataframe, only for 2018
-    df = get_dataframe_from_db_by_year(2018, 'traffic_incident')
-
-    print(df)
-    # Sort the dataframe df
-    sorted_incident_grids = sort_incidents_into_grids(df)
-
-
-
-    print('\nSorted dataframe:\n')
-    print(sorted_incident_grids)
-
-    # print(df[df.incident_info == 'Eastbound Mcknight Boulevard and Centre Street N'])
 
 
 if __name__ == "__main__":
     test()
-

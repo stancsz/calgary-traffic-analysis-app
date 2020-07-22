@@ -12,10 +12,15 @@ def render_dataframe(df):
                     'max-width': '500px',
                     'overflow-x': 'wrap'
                     },
-        page_size=20
+        page_size=20,
+        filter_action="native",
+        sort_action="native",
+        sort_mode="multi",
+        column_selectable="single",
+        row_selectable="multi",
     )
     render = html.Div([
-        html.H1('Rendered Dataframe'),
+        html.H3('Data'),
         render_html_table
     ])
     return render

@@ -1,4 +1,4 @@
-from database.db import get_dataframe_from_mongo_dummy
+from database import db
 from geojson import MultiLineString
 import re
 from pymongo import *
@@ -36,8 +36,9 @@ def get_geo_json(coordinates):
 
 
 def get_geo_json_form_df(geo_df, index):
-    geo_raw = geo_df[index]
+    geo_raw = geo_df.iloc[index]
     coordinates = parse_multiline_string(geo_raw)
+
     return get_geo_json(coordinates)
 
 
@@ -47,11 +48,12 @@ def get_geo_df(source_data_frame, the_geom_name):
 
 
 def test():
-    df = get_dataframe_from_mongo_dummy('../csv/2017_Traffic_Volume_Flow.csv')
-    src_geo_df = get_geo_df(df, 'the_geom')
+    # df = get_dataframe_from_mongo_dummy('../csv/2017_Traffic_Volume_Flow.csv')
+    # src_geo_df = get_geo_df(df, 'the_geom')
     # print(src_geo_df)
-    for index, values in enumerate(src_geo_df):
-        geojson = get_geo_json_form_df(src_geo_df, index)
+    # for index, values in enumerate(src_geo_df):
+    #     geojson = get_geo_json_form_df(src_geo_df, index)
+    return
 
 
 if __name__ == '__main__':
