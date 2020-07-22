@@ -8,14 +8,14 @@ def get_index(db_input, year_input):
     """
     input_var = str(db_input) + '/' + str(year_input)
     switcher = {
-        'volume/2016': -1,
-        'volume/2017': ['db_volume', '2017_traffic_volume_flow'],
-        'volume/2018': -1,
+        'volume/2016': 1,
+        'volume/2017': 1,
+        'volume/2018': 1,
         'volume/2019': -1,
         'volume/2020': -1,
-        'incidents/2016': -1,
-        'incidents/2017': -1,
-        'incidents/2018': -1,
+        'incidents/2016': 1,
+        'incidents/2017': 1,
+        'incidents/2018': 1,
         'incidents/2019': -1,
         'incidents/2020': -1,
     }

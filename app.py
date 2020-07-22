@@ -10,7 +10,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 
 from database import db
-from database.db import get_dataframe_from_mongo
+from database.db import get_dataframe_from_mongo, get_dataframe_from_db_by_year, ingest_data
 from database.db_index import get_index, get_status
 from html_renderer.render_graph import render_graph, generate_graph_dataframe_dummy
 from html_renderer.render_html import get_project_demo_page
@@ -18,8 +18,11 @@ from html_renderer.render_map import render_volume_map_html, render_incident_map
 from html_renderer.render_table import render_dataframe
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+csv_path = 'csv'
+df1, df2 = ingest_data(csv_path)  # ingest all csv data into mongo database
 
-# db.ingest_data('csv')  # ingest all csv data into mongo database
+
+
 """
 Quick Lookup for collection and db names
 Collection:  '2017_traffic_volume_flow'  is imported in DB: 'db_volume'
@@ -60,7 +63,7 @@ sidebar = html.Div(
             id='db-type',
             options=[
                 {'label': 'Traffic Volume', 'value': 'volume'},
-                {'label': 'Incidents', 'value': 'incidents'},
+                {'label': 'Incidents', 'value': 'incident'},
             ],
             # value='volume',
             placeholder="(Select a data type)",
@@ -127,11 +130,12 @@ def render_page_content(pathname, type_input, year_input):
     elif pathname == "/page-2":
         return html.P(""), return_status
     elif pathname == "/page-3":
+        # if inputs are invalid, prompt a message
         inputs = get_index(type_input, year_input)
         if inputs == -1:
             return html.P("Please enter valid values"), [""]
-        df = get_dataframe_from_mongo(inputs[0], inputs[1])
-        # df = db.get_dataframe_from_mongo_dummy('csv/2017_Traffic_Volume_Flow.csv')  # to load dummy data for testing
+        # process logics to get the right dataframe
+        df = get_dataframe_from_db_by_year(df1, df2, type_input, int(year_input))
         return render_dataframe(df), return_status
     elif pathname == "/page-4":
         return html.P("Sort"), return_status
