@@ -235,7 +235,7 @@ def import_csv_into_dataframe(path, type):
         # calculate gps grids of the incident and add them to the dataframe
         grids = []
         for index, row in dataFrame.iterrows():
-            grids.append(calculate_geogrid_number(row['latitude'], row['longitude'], 5))
+            grids.append(calculate_geogrid_number(row['latitude'], row['longitude'], 6)) #use 6x6 grids
         dataFrame['grid_num'] = grids
 
         # re-ordering dataframe columns
@@ -245,7 +245,7 @@ def import_csv_into_dataframe(path, type):
 
 
 def calculate_geogrid_number(latitude, longitude, grid_size):
-    # example, if gridsize = 5 then
+    # example, if gridsize = 10 then
     # 10 x 10 grid:
     # Grid 0 = grid on the very south-west
     # Grid 9 = grid on the very south-east
@@ -272,7 +272,7 @@ def calculate_geogrid_number(latitude, longitude, grid_size):
     # increase in latitude (corresponds going further north)
     for i in range(grid_size):
         if latitude < latitude_min or latitude > latitude_max:
-            pointYGrid = -1
+            pointYGrid = -1 # point is outside Calgary geo bounds, assign -1 for those entries
             break
         elif latitude <= grid_lati[i]:
             pointYGrid = i
@@ -281,13 +281,17 @@ def calculate_geogrid_number(latitude, longitude, grid_size):
     # increase in longitude (corresponds going further east)
     for i in range(grid_size):
         if longitude < longitude_min or longitude > longitude_max:
-            pointXGrid = -1
+            pointXGrid = -1 # point is outside Calgary geo bounds, assign -1 for those entries
             break
         if longitude <= grid_long[i]:
             pointXGrid = i
             break
 
-    gridNumber = (pointYGrid * grid_size) + pointXGrid
+    if pointYGrid == -1 or pointXGrid == -1:
+        gridNumber = -1
+    else:
+        gridNumber = (pointYGrid * grid_size) + pointXGrid
+
     return gridNumber
 
 
@@ -314,18 +318,18 @@ def get_dataframe_from_db_by_year(df1, df2, db_type, year):
 def sort_dataframe_by(df_in, type):
     """
     sorts a given dataframe by its given type (if traffic_volume then sorts by volume, traffic_incident by count)
-    manipulates the dataframe directly, does not return a different dataframe.
+    returns the sorted dataframe.
     """
     if type == 'volume':
         sortBy = 'volume'
+        # Sort df
+        df = df_in
+        df.sort_values(by=sortBy, inplace=True, ascending=False)
+        return df
 
     elif type == 'incident':
-        sortBy = 'count'
-
-    # Sort df
-    df = df_in
-    df.sort_values(by=sortBy, inplace=True, ascending=False)
-    return df
+        #incident sorting is done through gridding first and summing values for each grid
+        return sort_incidents_into_grids(df_in)
 
 
 def sort_incidents_into_grids(df):
