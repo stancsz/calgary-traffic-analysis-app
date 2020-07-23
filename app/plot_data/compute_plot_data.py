@@ -6,6 +6,11 @@ from database.db import ingest_data
 
 
 def most_frequent(list):
+    """
+    # Function creates a histogram of values of: (Incident Info : count)
+    # Will return description of incident info as well as frequency of occurence.
+    # Sorted in Descending order so first element is the maximum number of occurences of Incidents.
+    """
     hist = pd.value_counts(list.incident_info, sort=True, ascending=False)
     return hist[0]
 
@@ -46,9 +51,6 @@ def compute_plot_data(df1, df2):
     for x in volumes:
         vol_condensed.append(x / 100000)
 
-    # Function creates a histogram of values of: (Incident Info : count)
-    # Will return description of incident info as well as frequency of occurence.
-    # Sorted in Descending order so first element is the maximum number of occurences of Incidents.
 
     # Sum values within 'count' column to determine sum total.
     # Note: All count values were equal to 1 and representing each separate incident

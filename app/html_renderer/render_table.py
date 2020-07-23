@@ -12,7 +12,7 @@ def render_dataframe(df):
                     'max-width': '500px',
                     'overflow-x': 'wrap'
                     },
-        page_size=20,
+        page_size=22,
         filter_action="native",
         sort_action="native",
         sort_mode="multi",
