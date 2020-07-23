@@ -318,7 +318,7 @@ def get_dataframe_from_db_by_year(df1, df2, db_type, year):
 def sort_dataframe_by(df_in, type):
     """
     sorts a given dataframe by its given type (if traffic_volume then sorts by volume, traffic_incident by count)
-    manipulates the dataframe directly, does not return a different dataframe.
+    returns the sorted dataframe.
     """
     if type == 'volume':
         sortBy = 'volume'
