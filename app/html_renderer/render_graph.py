@@ -26,16 +26,21 @@ def render_graph(df1, df2):
                               name='lines+markers'))
 
     # fig.show()
-    render = html.Div([
-        html.H1("Volume Plot"),
-        dcc.Graph(
-            id='render-graph',
-            figure=fig
-        ),
-        html.H1("Incidents Plot"),
-        dcc.Graph(
-            id='render-graph',
-            figure=fig2
-        )
-    ])
+    render = \
+        html.Div([
+            html.Div([
+                html.H1("Volume Plot"),
+                dcc.Graph(
+                    id='render-graph',
+                    figure=fig
+                )
+             ]),
+            html.Div([
+                html.H1("Incidents Plot"),
+                dcc.Graph(
+                    id='render-graph',
+                    figure=fig2
+                )
+            ])
+        ])
     return render
