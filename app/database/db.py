@@ -322,7 +322,10 @@ def sort_dataframe_by(df_in, type):
     """
     if type == 'volume':
         sortBy = 'volume'
-        return df_in.sort_values(by=sortBy, inplace=True, ascending=False)
+        # Sort df
+        df = df_in
+        df.sort_values(by=sortBy, inplace=True, ascending=False)
+        return df
 
     elif type == 'incident':
         #incident sorting is done through gridding first and summing values for each grid
