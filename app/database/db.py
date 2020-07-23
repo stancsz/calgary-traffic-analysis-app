@@ -318,11 +318,14 @@ def get_dataframe_from_db_by_year(df1, df2, db_type, year):
 def sort_dataframe_by(df_in, type):
     """
     sorts a given dataframe by its given type (if traffic_volume then sorts by volume, traffic_incident by count)
-    manipulates the dataframe directly, does not return a different dataframe.
+    returns the sorted dataframe.
     """
     if type == 'volume':
         sortBy = 'volume'
-        return df_in.sort_values(by=sortBy, inplace=True, ascending=False)
+        # Sort df
+        df = df_in
+        df.sort_values(by=sortBy, inplace=True, ascending=False)
+        return df
 
     elif type == 'incident':
         #incident sorting is done through gridding first and summing values for each grid
