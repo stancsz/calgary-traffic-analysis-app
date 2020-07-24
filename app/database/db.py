@@ -20,8 +20,8 @@ def ingest_dataframe_to_db(df, db_name, collection_name, db_url='localhost', db_
     :param df: pandas dataframe
     :param db_name: name of the database (mongodb)
     :param collection_name: name of the collection
-    :param db_url: connection url, localhost by default
-    :param db_port: port for the connection
+    :param db_url: url of the database
+    :param db_port: port number of the database
     :return: None
     """
     mongo_client = pymongo.MongoClient(db_url, db_port)
@@ -40,8 +40,8 @@ def get_dataframe_from_mongo(db_name, collection_name, db_url='localhost', db_po
 
     :param db_name: name of the database (mongodb)
     :param collection_name: name of the collection
-    :param db_url:
-    :param db_port:
+    :param db_url: url of the database
+    :param db_port: port number of the database
     :return: pandas dataframe
     """
     check_collection_in_dbs(collection_name)
@@ -112,26 +112,32 @@ def reload_ingestion():
 
 def check_collection_in_dbs(collection_name, db_url='localhost', db_port=27017):
     """
-    reloads all dbs if program encountered a missing collection,
+    Reloads all dbs if program encountered a missing collection,
     if missing a collection, reload the entire data ingestion.
-    :return:
+
+    :param collection_name: name of the collection
+    :param db_url: url of the database
+    :param db_port: port number of the database
+    :return: None
     """
     mongo_client = pymongo.MongoClient(db_url, db_port)
     in_incident = (collection_name in mongo_client['db_incident'].list_collection_names())
     in_volume = (collection_name in mongo_client['db_volume'].list_collection_names())
     if not in_incident and not in_volume:
-        reload_ingestion()
+        drop_all_db()
+        ingest_data()
         print('Collection not found, reloading ingestion.')
 
 
 def print_collection(db_name, collection_name, db_url, db_port):
     """
-    this function prints collections in a db.
+    Prints the first 10 items in the collection found on specified mongodb/db_name/collection_name
 
-    :param db_name: db name to print
-    :param collection_name: collection name to print
-    :param db_url: url of the db
-    :param db_port: port for the db connection
+    :param db_name: name of the database
+    :param collection_name: name of the collection
+    :param db_url: url of the database
+    :param db_port: port number of the database
+    :return: None
     """
     mongo_client = pymongo.MongoClient(db_url, db_port)
     db_connection = mongo_client[db_name]
@@ -144,13 +150,14 @@ def print_collection(db_name, collection_name, db_url, db_port):
 
 def drop_collection(db_name, collection_name, db_url='localhost', db_port=27017):
     """
-    check collection in a db_connection, and then drop it if it exists
+    Check collection in a db_name, and then drops it if it already exists.
+    Prints a message to the CLI regarding the outcome.
 
-    :param db_name: db to drop connection
-    :param collection_name: collection to drop
-    :param db_url: db's url
-    :param db_port: port for the db
-    :return:
+    :param db_name: name of the database
+    :param collection_name: name of the collection
+    :param db_url: url of the database
+    :param db_port: port number of the database
+    :return: None
     """
     mongo_client = pymongo.MongoClient(db_url, db_port)
     db_connection = mongo_client[db_name]
@@ -164,7 +171,7 @@ def drop_collection(db_name, collection_name, db_url='localhost', db_port=27017)
         print(collection_name, 'exists:', False)
 
 
-def create_db(db_name, collection_name, db_url='localhost', db_port=27017):
+def create_db(db_name, db_url='localhost', db_port=27017):
     """
     creates an empty database
     :param db_name: db to drop connection
@@ -175,14 +182,16 @@ def create_db(db_name, collection_name, db_url='localhost', db_port=27017):
     """
     mongo_client = pymongo.MongoClient(db_url, db_port)
     db_connection = mongo_client[db_name]
+    
 
 
 def drop_all_db(db_url='localhost', db_port=27017):
     """
-    Drops all databases which contain keyword 'db_'
+    Drops all databases which contain keyword 'db_' (in our application they are user defined databases).
+    Prints a message to the console when a database is successfully dropped. 
 
-    :param db_url: db's url
-    :param db_port: port for the db
+    :param db_url: url of the database
+    :param db_port: port number of the database
     :return: None
     """
 
@@ -197,13 +206,16 @@ def drop_all_db(db_url='localhost', db_port=27017):
 
 def import_csv_into_dataframe(path, type):
     """
-    Reads the path provided csv file and puts that into a dataframe in a standard way.
+    Reads target csv file and puts that into a dataframe in a standard way, according to the type specified.
+
     For traffic_volume, column structure will be
         -- 'segment_name', 'year', 'the_geom', 'length_m', 'volume' --
     For traffic_incident, column structure will be
         -- 'incident_info', 'description', 'start_dt', 'modified_dt', 'year',
-        'quadrant', 'longitude', 'latitude', 'location', 'count' --
+        'quadrant', 'longitude', 'latitude', 'location', 'count' ', 'grid_num' --
 
+    :param path: path to the target csv file to be read.
+    :param type: type of csv to be read, either 'traffic_volume' or 'traffic_incident'
     :return: re-structured dataframe
     """
     dataFrame = pd.read_csv(path)
@@ -267,9 +279,12 @@ def calculate_geogrid_number(latitude, longitude, grid_size):
     10 x 10 grid:
     Grid 0 = grid on the very south-west
     Grid 9 = grid on the very south-east
+
     Grids 44, 45, 54, 55 = grids close to the city center
+
     Grid 90 = grid on the very north-west
     Grid 99 = grid on the very north-east
+
     :param latitude: latitude of the gps point, should be supplied in decimal format (ie, 40.103)
     :param longitude: longitude of the gps point, should be supplied in decimal format (ie, 40.103)
     :return: geo-grid number of the given latitude, longitude pair. -1 if point is calculated outside Calgary.
@@ -326,24 +341,18 @@ def get_dataframe_from_db_by_year(df1, df2, db_type, year):
     """
     if db_type == 'volume':
         df = df1
-        # databaseName = 'db_volume'
-        # collectionName = 'all_volumes'
-        return_df=df[df['year'] == year]
-        # return df[df['year'] == year]
+        return_df = df[df['year'] == year]
         return return_df
     elif db_type == 'incident':
         df = df2
-        # databaseName = 'db_incident'
-        # collectionName = 'all_incidents'
-        return_df=df[df['year'] == year]
-        # return df[df['year'] == year]
+        return_df = df[df['year'] == year]
         return return_df
 
 def sort_dataframe_by(df_in, type):
     """
     Sorts a given dataframe by its given type.
     (if type is volume then sorts by 'volume', if type is incident then sorts by count)
-
+    
     :param df_in: dataframe to be sorted
     :param type: type of dataframe, either 'volume' or 'incident'
     :return: a copy of the inputted dataframe which is sorted.
@@ -364,19 +373,30 @@ def sort_incidents_into_grids(df):
     """
     Takes a dataframe of type incidents and then makes another dataframe which puts all entries
     sharing the same grid number and also calculation total count of incidents per grid number.
-
+    
     :param df: incidents dataframe to be processed into grids.
     :return: a new dataframe with columns grid_number and total incidents/grid.
     """
     newDf = pd.DataFrame(columns=['grid_num', 'incidents'])
     rowNum = 0
+    #iterate on min grid number to max found in the incidents dataframe.
     for i in range(df['grid_num'].min(), df['grid_num'].max()):
+        # filter entries to one grid at a time.
         df_OnlyOneGrid = df[df.grid_num == i]
+
+        # populate grid number column for the new dataframe.
         grid_Num = i
+
+        # populate total incidents column for the new dataframe.
         incidents = df_OnlyOneGrid['count'].sum()
+
+        # make a new row from the calculated values above.
         newDf.loc[rowNum] = [grid_Num, incidents]
+
+        #go to the next row.
         rowNum += 1
 
+    # return the newly build grid_num - total incidents dataframe.
     return newDf
 
 
