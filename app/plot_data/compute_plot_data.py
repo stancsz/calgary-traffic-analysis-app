@@ -10,6 +10,9 @@ def most_frequent(list):
     # Function creates a histogram of values of: (Incident Info : count)
     # Will return description of incident info as well as frequency of occurence.
     # Sorted in Descending order so first element is the maximum number of occurences of Incidents.
+    
+    :param list: dataframe of file for incidents in a specific year 
+    :return: hist[0]: Returns maximum value of incident in specific year
     """
     hist = pd.value_counts(list.incident_info, sort=True, ascending=False)
     return hist[0]
@@ -19,6 +22,13 @@ def compute_plot_data(df1, df2):
     '''
     Identify/plot maximum traffic volumes in Calgary between 2016-2018 (2019/20 data was not available)
     Identify/plot maximum accident volumes at specific intersection (using Column: Incident_Info) in Calgary between 2016-2020
+    :param: df1: first dataframe for volume
+    :param: df2: second dataframe for incident
+
+    :return: volumes_x: Year for volumes (2016-2018)
+    :return: volumes: Maximum volumes corresponding to specific years 2016-2018
+    :return: incidents_x:Year for incidents (2016-2020)
+    :return: incidents: Maximum incidents corresponding to specific years 2016-2020
     '''
 
     # Read csv files and load them into dataframe
@@ -102,6 +112,9 @@ def compute_plot_data(df1, df2):
 
 
 def test():
+    '''
+    Function used to test file and debug 
+    '''
     # year = [2016, 2017, 2018, 2019, 2020]
     # vol_list=[]
     # for i, val in enumerate(year):
