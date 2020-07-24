@@ -10,7 +10,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 
 from database import db
-from database.db import get_dataframe_from_mongo, get_dataframe_from_db_by_year, ingest_data, sort_dataframe_by
+from database.db import get_dataframe_from_db_by_year, ingest_data, sort_dataframe_by
 from database.db_index import get_index, get_status
 from html_renderer.render_graph import render_graph
 from html_renderer.render_html import get_project_demo_page
@@ -146,13 +146,13 @@ def render_page_content(pathname, type_input, year_input):
         if inputs == -1:
             return html.P("Please enter valid values"), [""]
         # process logics to get the right dataframe
-        df = get_dataframe_from_db_by_year(df1, df2, type_input, int(year_input))
+        df = get_dataframe_from_db_by_year(type_input, int(year_input))
         return render_dataframe(df), return_status
     elif pathname == "/page-4":
         inputs = get_index(type_input, year_input)
         if inputs == -1:
             return html.P("Please enter valid values"), [""]
-        df_in = get_dataframe_from_db_by_year(df1, df2, type_input, int(year_input))
+        df_in = get_dataframe_from_db_by_year(type_input, int(year_input))
         df = sort_dataframe_by(df_in, type_input)
         return render_dataframe(df), return_status
     elif pathname == "/page-5":
@@ -164,7 +164,7 @@ def render_page_content(pathname, type_input, year_input):
         #     return html.P("Please enter valid values"), [""]
         # process logics to get the right dataframe
         # print(type_input, int(year_input))
-        df = get_dataframe_from_db_by_year(df1, df2, type_input, int(year_input))
+        df = get_dataframe_from_db_by_year(type_input, int(year_input))
         if type_input == 'volume':
             # to render a volume map
             item = df[df.volume == df.volume.max()]

@@ -40,16 +40,16 @@ def compute_plot_data(df1, df2):
     incidents = [0, 0, 0, 0, 0]
 
     # Get and store dataframe for a specific year and type (volume or incident)
-    vol_16 = db.get_dataframe_from_db_by_year(df1, df2, 'volume', 2016)
-    vol_17 = db.get_dataframe_from_db_by_year(df1, df2, 'volume', 2017)
-    vol_18 = db.get_dataframe_from_db_by_year(df1, df2, 'volume', 2018)
+    vol_16 = db.get_dataframe_from_db_by_year('volume', 2016)
+    vol_17 = db.get_dataframe_from_db_by_year('volume', 2017)
+    vol_18 = db.get_dataframe_from_db_by_year('volume', 2018)
 
     # More data available (2019/20 years) for incidents
-    inc_16 = db.get_dataframe_from_db_by_year(df1, df2, 'incident', 2016)
-    inc_17 = db.get_dataframe_from_db_by_year(df1, df2, 'incident', 2017)
-    inc_18 = db.get_dataframe_from_db_by_year(df1, df2, 'incident', 2018)
-    inc_19 = db.get_dataframe_from_db_by_year(df1, df2, 'incident', 2019)
-    inc_20 = db.get_dataframe_from_db_by_year(df1, df2, 'incident', 2020)
+    inc_16 = db.get_dataframe_from_db_by_year('incident', 2016)
+    inc_17 = db.get_dataframe_from_db_by_year('incident', 2017)
+    inc_18 = db.get_dataframe_from_db_by_year('incident', 2018)
+    inc_19 = db.get_dataframe_from_db_by_year('incident', 2019)
+    inc_20 = db.get_dataframe_from_db_by_year('incident', 2020)
 
     # Sum values within 'volume' column to determine sum total
     volumes[0] = vol_16['volume'].max()

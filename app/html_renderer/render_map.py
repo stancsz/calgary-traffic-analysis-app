@@ -58,7 +58,6 @@ def render_incident_map(df):
     :param df: insident dataframe to render
     :return: rendered html content that contains the html for incident plot
     """
-    # df = db.get_dataframe_from_mongo('db_incident', 'traffic_incidents')
     yyc_coordinates = (51.049999, -114.066666)
     yyc_map = folium.Map(location=yyc_coordinates, zoom_start=10)
     src_geo_df = df[["longitude", "latitude"]]

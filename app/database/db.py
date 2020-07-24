@@ -330,23 +330,20 @@ def calculate_geogrid_number(latitude, longitude, grid_size):
     return gridNumber
 
 
-def get_dataframe_from_db_by_year(df1, df2, db_type, year):
+def get_dataframe_from_db_by_year(db_type, year):
     """
     returns a dataframe from mongodb by its given type and filtered by year
-    :param df1: first dataframe
-    :param df2: second dataframe
     :param db_type: type of database to read from, either 'volume' or 'incident'
     :param year: year value to apply on the dataframe to filter entries.
     :return: dataframe (filtered by year)
     """
     if db_type == 'volume':
-        df = df1
-        return_df = df[df['year'] == year]
-        return return_df
+        df = get_dataframe_from_mongo('db_volume','all_volumes')
     elif db_type == 'incident':
-        df = df2
-        return_df = df[df['year'] == year]
-        return return_df
+        df = get_dataframe_from_mongo('db_incident','all_incidents')
+        
+    return_df = df[df['year'] == year]
+    return return_df
 
 def sort_dataframe_by(df_in, type):
     """
@@ -397,6 +394,7 @@ def sort_incidents_into_grids(df):
         rowNum += 1
 
     # return the newly build grid_num - total incidents dataframe.
+    newDf.sort_values(by='incidents', inplace=True, ascending=False)
     return newDf
 
 
@@ -408,9 +406,8 @@ def test():
     # Read csv files and load them onto db
     df1, df2 = ingest_data('../csv')
     for year in range(2016, 2019):
-        # print(get_dataframe_from_db_by_year(df1, df2, 'volume', year))
-        # print()
-        df=get_dataframe_from_db_by_year(df1, df2, 'volume', year)
+
+        df=get_dataframe_from_db_by_year('volume', year)
         print(df.columns)
         print(sort_dataframe_by(df,'volume'))
 
