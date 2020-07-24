@@ -1,4 +1,12 @@
 # How to run this program
+
+Our project is a flask app. The main program is located at:
+
+```
+app/main.py
+```
+
+
 ```
 python3.8 /home/stan/ensf/calgary-traffic-analysis-app/app/main.py
 ```
