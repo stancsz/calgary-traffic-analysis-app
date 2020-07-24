@@ -1,4 +1,6 @@
 """
+this module is the infrastructure for the db interactions. calls and create a local db
+to provide basic infrastructure for the main program
 https://docs.mongodb.com/drivers/pymongo
 please make sure mongod is active before running this module
 """
@@ -13,13 +15,13 @@ import json
 
 def ingest_dataframe_to_db(df, db_name, collection_name, db_url='localhost', db_port=27017):
     """
-    Imports a pandas dataframe into a mongo colection
+    Imports a pandas dataframe into a mongo colection.
 
     :param df: pandas dataframe
     :param db_name: name of the database (mongodb)
     :param collection_name: name of the collection
-    :param db_url:
-    :param db_port:
+    :param db_url: connection url, localhost by default
+    :param db_port: port for the connection
     :return: None
     """
     mongo_client = pymongo.MongoClient(db_url, db_port)
@@ -99,6 +101,11 @@ def ingest_data(csv_key):
 
 
 def reload_ingestion():
+    """
+    this function is to reload ingestion, by first calling drop all db
+    and then re-ingest all data.
+    :return:
+    """
     drop_all_db()
     ingest_data()
 
@@ -119,10 +126,12 @@ def check_collection_in_dbs(collection_name, db_url='localhost', db_port=27017):
 
 def print_collection(db_name, collection_name, db_url, db_port):
     """
-    :param db_name:
-    :param collection_name:
-    :param db_url:
-    :param db_port:
+    this function prints collections in a db.
+
+    :param db_name: db name to print
+    :param collection_name: collection name to print
+    :param db_url: url of the db
+    :param db_port: port for the db connection
     """
     mongo_client = pymongo.MongoClient(db_url, db_port)
     db_connection = mongo_client[db_name]
@@ -137,10 +146,10 @@ def drop_collection(db_name, collection_name, db_url='localhost', db_port=27017)
     """
     check collection in a db_connection, and then drop it if it exists
 
-    :param db_name:
-    :param collection_name:
-    :param db_url:
-    :param db_port:
+    :param db_name: db to drop connection
+    :param collection_name: collection to drop
+    :param db_url: db's url
+    :param db_port: port for the db
     :return:
     """
     mongo_client = pymongo.MongoClient(db_url, db_port)
@@ -157,8 +166,12 @@ def drop_collection(db_name, collection_name, db_url='localhost', db_port=27017)
 
 def create_db(db_name, collection_name, db_url='localhost', db_port=27017):
     """
-    creating an empty database
-    :return: None
+    creates an empty database
+    :param db_name: db to drop connection
+    :param collection_name: collection to drop
+    :param db_url: db's url
+    :param db_port: port for the db
+    :return:
     """
     mongo_client = pymongo.MongoClient(db_url, db_port)
     db_connection = mongo_client[db_name]
@@ -168,8 +181,8 @@ def drop_all_db(db_url='localhost', db_port=27017):
     """
     Drops all databases which contain keyword 'db_'
 
-    :param db_url:
-    :param db_port:
+    :param db_url: db's url
+    :param db_port: port for the db
     :return: None
     """
 
@@ -245,15 +258,22 @@ def import_csv_into_dataframe(path, type):
 
 
 def calculate_geogrid_number(latitude, longitude, grid_size):
-    # example, if gridsize = 10 then
-    # 10 x 10 grid:
-    # Grid 0 = grid on the very south-west
-    # Grid 9 = grid on the very south-east
-
-    # Grids 44, 45, 54, 55 = grids close to the city center
-
-    # Grid 90 = grid on the very north-west
-    # Grid 99 = grid on the very north-east
+    """
+    Divides Calgary into equi-distant square geographical grids, using the grid_size argument.
+    If grid_size is 10, then Calgary will be divided into 10x10 = 100 grids.
+    Then, calculates the geogrid number for the given latitude, longitude pair.
+    Please refer to \static\grid.png to a visual representation of a 6x6 sample grid layout.
+    example, if gridsize = 10 then
+    10 x 10 grid:
+    Grid 0 = grid on the very south-west
+    Grid 9 = grid on the very south-east
+    Grids 44, 45, 54, 55 = grids close to the city center
+    Grid 90 = grid on the very north-west
+    Grid 99 = grid on the very north-east
+    :param latitude: latitude of the gps point, should be supplied in decimal format (ie, 40.103)
+    :param longitude: longitude of the gps point, should be supplied in decimal format (ie, 40.103)
+    :return: geo-grid number of the given latitude, longitude pair. -1 if point is calculated outside Calgary.
+    """
 
     # GPS boundaries for Calgary
     longitude_max = -113.75
@@ -297,7 +317,11 @@ def calculate_geogrid_number(latitude, longitude, grid_size):
 
 def get_dataframe_from_db_by_year(df1, df2, db_type, year):
     """
-    returns a dataframe from mongodb by its given type and filters entries by year
+    returns a dataframe from mongodb by its given type and filtered by year
+    :param df1: first dataframe
+    :param df2: second dataframe
+    :param db_type: type of database to read from, either 'volume' or 'incident'
+    :param year: year value to apply on the dataframe to filter entries.
     :return: dataframe (filtered by year)
     """
     if db_type == 'volume':
@@ -317,8 +341,12 @@ def get_dataframe_from_db_by_year(df1, df2, db_type, year):
 
 def sort_dataframe_by(df_in, type):
     """
-    sorts a given dataframe by its given type (if traffic_volume then sorts by volume, traffic_incident by count)
-    returns the sorted dataframe.
+    Sorts a given dataframe by its given type.
+    (if type is volume then sorts by 'volume', if type is incident then sorts by count)
+
+    :param df_in: dataframe to be sorted
+    :param type: type of dataframe, either 'volume' or 'incident'
+    :return: a copy of the inputted dataframe which is sorted.
     """
     if type == 'volume':
         sortBy = 'volume'
@@ -333,6 +361,13 @@ def sort_dataframe_by(df_in, type):
 
 
 def sort_incidents_into_grids(df):
+    """
+    Takes a dataframe of type incidents and then makes another dataframe which puts all entries
+    sharing the same grid number and also calculation total count of incidents per grid number.
+
+    :param df: incidents dataframe to be processed into grids.
+    :return: a new dataframe with columns grid_number and total incidents/grid.
+    """
     newDf = pd.DataFrame(columns=['grid_num', 'incidents'])
     rowNum = 0
     for i in range(df['grid_num'].min(), df['grid_num'].max()):
@@ -347,8 +382,8 @@ def sort_incidents_into_grids(df):
 
 def test():
     """
-    Testing stuff
-    :return:
+    Testing sub-routine.
+    :return: None
     """
     # Read csv files and load them onto db
     df1, df2 = ingest_data('../csv')

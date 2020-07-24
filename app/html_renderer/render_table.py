@@ -3,6 +3,11 @@ import dash_html_components as html
 
 
 def render_dataframe(df):
+    """
+    renders tabular table from input dataframe
+    :param df: dataframe to be rendered
+    :return: the html code that contains the html code for the rendered table
+    """
     render_html_table = dash_table.DataTable(
         id='table',
         columns=[{"name": i.replace("_", " ").title(), "id": i} for i in df.columns],

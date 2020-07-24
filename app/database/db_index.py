@@ -2,9 +2,9 @@ def get_index(db_input, year_input):
     """
     get_index computes the GUI selection and return a [db type, collection name]
     to the function caller
-    :param db_input:
-    :param year_input:
-    :return:
+    :param db_input: type selection
+    :param year_input: year selection
+    :return: 1 if valid, -1 otherwise
     """
     input_var = str(db_input) + '/' + str(year_input)
     switcher = {
@@ -24,6 +24,12 @@ def get_index(db_input, year_input):
 
 
 def get_status(pathname):
+    """
+    get_status compute the status for the green status box
+
+    :param pathname:path for the app request
+    :return: the corresponding success message
+    """
     switcher = {
         '/': 'Status',
         '/page-1': 'Status',
@@ -39,6 +45,10 @@ def get_status(pathname):
 
 
 def test():
+    """
+    tests for  local functions
+    :return:
+    """
     print(get_index('volume', '2017'))
     print(get_index('volume', '2017')[0])
     print(get_index('volume', '2017')[1])

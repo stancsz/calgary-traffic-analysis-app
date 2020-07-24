@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# A bash script to start mongodb services
+
+
 # ps --no-headers -o comm 1
 # https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/
 

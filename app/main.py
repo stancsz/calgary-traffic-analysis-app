@@ -105,13 +105,16 @@ content = html.Div(id="page-content", style=CONTENT_STYLE)
 app.layout = html.Div([dcc.Location(id="url"), sidebar, content])
 
 
-# this callback uses the current pathname to set the active state of the
-# corresponding nav link to true, allowing users to tell see page they are on
 @app.callback(
     [Output(f"page-{i}-link", "active") for i in range(3, 7)],
     [Input("url", "pathname")],
 )
 def toggle_active_links(pathname):
+    """
+    toggle active links toggles the active link as a callback to make the active link stay active
+    :param pathname: the path for the http request
+    :return: return a list of variables that contains the active states for the tabs.
+    """
     if pathname == "/":
         # Treat page 1 as the homepage / index
         # return True, False, False, False, False, False
@@ -122,6 +125,15 @@ def toggle_active_links(pathname):
 @app.callback([Output("page-content", "children"), Output("load-status-bar", "children")],
               [Input("url", "pathname"), Input("db-type", "value"), Input("data-year", "value")])
 def render_page_content(pathname, type_input, year_input):
+    """
+    render page content renders page based on the http path. Using callback inputs and outputs,
+    this function gets the data from db type or year type. which then is passed to corresponding functions for
+    implementing further progrom logics.
+    :param pathname: the path for the http request
+    :param type_input:
+    :param year_input:
+    :return:
+    """
     return_status = get_status(pathname)
     if pathname in ["/", "/page-1"]:
         return_html = get_project_demo_page()
