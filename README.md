@@ -1,20 +1,24 @@
+# Install runtime requirements
 
+```shell script
+pip install -r requirements.txt
+```
 
+# Pyenv
+```
+# Get pyenv
+curl https://pyenv.run | bash
 
+# Get a list a avaliable python
+pyenv install -l
 
-References
+# install a specific version
+pyenv install 3.8.5
 
-Sidebar 
-- https://dash-bootstrap-components.opensource.faculty.ai/examples/simple-sidebar/page-3
-
-Install mongodb
-- https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/
-
-
-Balla's list
-- https://www.mongodb.com/blog/post/getting-started-with-python-and-mongodb 
-- https://realpython.com/python-gui-tkinter/ 
-- https://data.calgary.ca/Transportation-Transit/Traffic-Volumes-for-2017/nq4z-ts9x 
-- pymongo
-- matplotlib
-- folium
+# Use Pyenv
+eval "$(pyenv init -)"
+pyenv versions
+pyenv shell 3.8.5
+python --version
+virtualenv venv3.8.5
+``` 
