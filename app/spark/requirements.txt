@@ -1,0 +1,4 @@
+pyspark_stubs==3.0.0
+pandas==0.25.3
+app==0.0.1
+pyspark==3.0.0
