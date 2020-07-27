@@ -1,3 +1,11 @@
+# Traffic Analysis Term Project
+
+![image-20200726194244241](README.assets/image-20200726194244241.png)
+
+This project consists of 3 phases, it is data driven project from ENSF 592 course. Current progression is at phase-I: POCs and exploratory analysis. 
+
+
+
 # How to run this program
 
 Our project is a flask app. The main program is located at:
@@ -10,7 +18,12 @@ app/main.py
 ```
 python3.8 /home/stan/ensf/calgary-traffic-analysis-app/app/main.py
 ```
+
+
+
+
 # Dependencies
+
 ```
 pandas==0.25.3
 numpy==1.19.0
@@ -68,5 +81,5 @@ pyenv versions
 pyenv shell 3.8.5
 python --version
 virtualenv venv3.8.5
-``` 
+```
 

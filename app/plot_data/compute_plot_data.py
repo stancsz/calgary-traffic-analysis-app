@@ -121,7 +121,7 @@ def test():
     #     vol_list.append(val)
     # print(vol_list)
 
-    csv_path = '../csv'
+    csv_path = '../../csv'
     df1, df2 = ingest_data(csv_path)  # ingest all csv data into mongo database
     for i in compute_plot_data(df1, df2):
         print(i)

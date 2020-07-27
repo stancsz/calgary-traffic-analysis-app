@@ -19,7 +19,7 @@ from html_renderer.render_table import render_dataframe
 from plot_data.compute_plot_data import compute_plot_data
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
-csv_path = 'csv'
+csv_path = '../csv'
 df1, df2 = ingest_data(csv_path)  # ingest all csv data into mongo database
 
 """
