@@ -70,6 +70,7 @@ def main():
                                 , StructField("count", IntegerType(), True) \
                                 , StructField("grid_num", IntegerType(), True)
                              ])
+
     spark, sc = spark_init()
     sdf_vol = spark.createDataFrame(pdf_vol, schema=vol_schema)
     sdf_inc = spark.createDataFrame(pdf_inc, schema=inc_schema)
